@@ -1,30 +1,39 @@
 # Skill: Task Management
 
-Manage the shared task list at `1 Project/tasks.md`.
+Manage the task snapshot at `collalog/tasks.md`.
+
+Tasks originate from the unified log (`collalog/log.md`, type: task). The task list
+is a living snapshot — a quick-reference view of what's open, who owns it, and what's done.
 
 ## Task Format
 
 ```markdown
 - [ ] Task description (@Owner, due date or context)
-```
-
-Completed:
-```markdown
-- [x] Task description (@Owner, completed YYYY-MM-DD)
+- [x] Completed task (@Owner, completed YYYY-MM-DD)
 ```
 
 ## Categories
 
-Organize tasks under headings:
+Organize under headings that fit the project. Common categories:
 
-- **Content** — Writing, editing, creating deliverables
-- **Research** — Investigation, data gathering, analysis
-- **Organization** — Process, planning, coordination
-- **Tech** — Setup, tooling, infrastructure
+- **Setup** — Initial project configuration
+- **Content** — Writing, creating deliverables
+- **Research** — Investigation, data gathering
+- **Tech** — Tooling, infrastructure, code
+
+## Workflow
+
+1. When a task is mentioned in conversation or the log → add to task list + log entry [task]
+2. When a task is completed → check it off in task list + log entry [task]
+3. When a task is blocked → note the blocker in the task list + log entry [note]
 
 ## Example
 
 ```markdown
+# Tasks — ProjectName
+
+> Last updated: 2026-03-19
+
 ## Content
 - [ ] Write project brief (@SG, due 2026-03-25)
 - [ ] Review competitor analysis (@NR)
@@ -32,16 +41,13 @@ Organize tasks under headings:
 
 ## Tech
 - [ ] Set up CI/CD pipeline (@AP, blocked by: hosting decision)
-- [ ] Configure monitoring (@AP)
 ```
 
 ## Rules
 
-- When a team member mentions a task, add it to the list with an owner
-- When a task is completed, check it off with the completion date
-- Move completed items to the bottom of their category after 2 weeks
-- Update the "Last updated" date whenever the file changes
-- If a task has no owner, assign it or flag it for discussion
+- Every task change also gets a log entry (type: task)
 - Keep task descriptions actionable — start with a verb
+- Always assign an owner when possible
 - Mark blocked tasks with `blocked by:` and what they depend on
-- Pair every task list change with a git commit (type: task)
+- Update "Last updated" whenever the file changes
+- Remove completed tasks after 2 weeks (they live on in the log)

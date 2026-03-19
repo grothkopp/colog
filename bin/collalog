@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# clawlaborate - Collaborative AI agent setup for teams
-# Installs skills, prompts, and project structure for multi-person + agent collaboration
+# clawlaborate — Collaborative AI agent setup for teams
+# Central unified log + skills for multi-person + agent collaboration
 # Inspired by speckit and openspec
 
 set -euo pipefail
 
-VERSION="0.2.0"
+VERSION="0.3.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 TEMPLATES_DIR="$ROOT_DIR/templates"
@@ -18,14 +18,12 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-log()   { echo -e "${GREEN}[clawbo]${NC} $1"; }
-warn()  { echo -e "${YELLOW}[clawbo]${NC} $1"; }
-error() { echo -e "${RED}[clawbo]${NC} $1" >&2; }
-info()  { echo -e "${BLUE}[clawbo]${NC} $1"; }
+log()   { echo -e "${GREEN}[collalog]${NC} $1"; }
+warn()  { echo -e "${YELLOW}[collalog]${NC} $1"; }
+error() { echo -e "${RED}[collalog]${NC} $1" >&2; }
+info()  { echo -e "${BLUE}[collalog]${NC} $1"; }
 
 # ─── AGENT CONFIGURATIONS ─────────────────────────────────────────────────
-# Where each AI tool expects its commands/skills
-# Format: agent_commands_dir | agent_skills_dir | file_pattern | extension
 
 declare -A AGENT_COMMANDS_DIR=(
   [claude]=".claude/commands"
@@ -42,13 +40,12 @@ declare -A AGENT_COMMANDS_DIR=(
   [openclaw]=".clawlaborate/skills"
 )
 
-# File naming pattern per agent
 agent_skill_filename() {
   local agent="$1" skill_name="$2"
   case "$agent" in
-    copilot) echo "clawbo.${skill_name}.agent.md" ;;
-    gemini)  echo "clawbo.${skill_name}.toml" ;;
-    *)       echo "clawbo.${skill_name}.md" ;;
+    copilot) echo "collalog.${skill_name}.agent.md" ;;
+    gemini)  echo "collalog.${skill_name}.toml" ;;
+    *)       echo "collalog.${skill_name}.md" ;;
   esac
 }
 
@@ -64,11 +61,11 @@ usage() {
 clawlaborate v${VERSION} — Collaborative AI agent setup for teams
 
 Usage:
-  clawbo init [path]           Initialize a new project with clawlaborate
-  clawbo setup                 Interactive project configuration
-  clawbo update                Update skills/prompts from clawlaborate templates
-  clawbo sync                  Show diff between project and templates
-  clawbo version               Show version
+  collalog init [path]          Initialize a new project
+  collalog setup                Interactive project configuration
+  collalog update               Update skills/prompts from templates
+  collalog sync                 Show diff between project and templates
+  collalog version              Show version
 
 Options:
   --agent <type>    AI tool: claude (default), codex, cursor, gemini,
@@ -76,25 +73,11 @@ Options:
   --lang <lang>     Language for project files: en (default), de
   --help            Show this help
 
-Supported Agents:
-  claude        Claude Code       .claude/commands/
-  codex         OpenAI Codex      .codex/prompts/
-  cursor        Cursor            .cursor/commands/
-  gemini        Gemini CLI        .gemini/commands/
-  windsurf      Windsurf          .windsurf/workflows/
-  copilot       GitHub Copilot    .github/agents/
-  kilo          Kilo Code         .kilocode/workflows/
-  roo           Roo               .roo/commands/
-  opencode      OpenCode          .opencode/command/
-  kiro          Kiro CLI          .kiro/prompts/
-  amp           Amp               .agents/commands/
-  openclaw      OpenClaw          .clawlaborate/skills/
-
 Examples:
-  clawbo init .                        # Init in current directory (Claude)
-  clawbo --agent codex init ./project  # Init for Codex
-  clawbo setup                         # Interactive setup wizard
-  clawbo update                        # Pull latest generic templates
+  collalog init .                          # Init in current dir (Claude)
+  collalog --agent codex init ./project    # Init for Codex
+  collalog setup                           # Interactive setup wizard
+  collalog update                          # Pull latest templates
 EOF
 }
 
@@ -119,14 +102,12 @@ cmd_init() {
   local agent="${AGENT:-claude}"
   local lang="${LANG_OPT:-en}"
 
-  # Validate agent
   if [[ -z "${AGENT_COMMANDS_DIR[$agent]+x}" ]]; then
     error "Unknown agent: $agent"
     error "Supported: ${!AGENT_COMMANDS_DIR[*]}"
     exit 1
   fi
 
-  # Resolve target
   if [[ ! -d "$target" ]]; then
     mkdir -p "$target"
     log "Created directory: $target"
@@ -139,8 +120,12 @@ cmd_init() {
   log "Agent: $agent | Commands: $commands_dir | Language: $lang"
   echo ""
 
-  # Create .clawlaborate structure
-  mkdir -p "$target/.clawlaborate"/{templates/skills,templates/prompts,memory,logs,prompts}
+  # Create collalog/ — the single user-facing directory
+  mkdir -p "$target/collalog"
+  info "  + collalog/"
+
+  # Create .clawlaborate/ — fixed elements only (templates, prompts, config)
+  mkdir -p "$target/.clawlaborate"/{templates/skills,templates/prompts,prompts}
   info "  + .clawlaborate/"
 
   # Create agent-specific commands directory
@@ -179,55 +164,28 @@ cmd_init() {
     fi
   done
 
-  # Install memory templates → .clawlaborate/memory/
-  log "Installing memory templates..."
-  for mem in "$TEMPLATES_DIR/memory"/*.md; do
-    [[ -f "$mem" ]] || continue
-    local name=$(basename "$mem")
-    if [[ ! -f "$target/.clawlaborate/memory/$name" ]]; then
-      cp "$mem" "$target/.clawlaborate/memory/$name"
-      info "  + .clawlaborate/memory/$name"
+  # Create collalog files from templates
+  log "Creating collalog files..."
+  for tmpl in "$TEMPLATES_DIR/collalog"/*.md; do
+    [[ -f "$tmpl" ]] || continue
+    local name=$(basename "$tmpl")
+    if [[ ! -f "$target/collalog/$name" ]]; then
+      cp "$tmpl" "$target/collalog/$name"
+      info "  + collalog/$name"
     else
-      warn "  ~ .clawlaborate/memory/$name (exists, skipped)"
+      warn "  ~ collalog/$name (exists, skipped)"
     fi
   done
 
-  # Install log templates → .clawlaborate/logs/
-  log "Installing log templates..."
-  for logf in "$TEMPLATES_DIR/logs"/*.md; do
-    [[ -f "$logf" ]] || continue
-    local name=$(basename "$logf")
-    if [[ ! -f "$target/.clawlaborate/logs/$name" ]]; then
-      cp "$logf" "$target/.clawlaborate/logs/$name"
-      info "  + .clawlaborate/logs/$name"
-    else
-      warn "  ~ .clawlaborate/logs/$name (exists, skipped)"
-    fi
-  done
-
-  # Create human-facing directories
-  for dir in "0 Inbox" "1 Project"; do
-    if [[ ! -d "$target/$dir" ]]; then
-      mkdir -p "$target/$dir"
-      info "  + $dir/"
-    fi
-  done
-
-  # Create tasks file
-  if [[ ! -f "$target/1 Project/tasks.md" ]]; then
-    cp "$TEMPLATES_DIR/tasks.md" "$target/1 Project/tasks.md" 2>/dev/null || true
-    info "  + 1 Project/tasks.md"
-  fi
-
-  # Copy CLAUDE.md template if no main prompt exists
+  # Copy CLAUDE.md template
   if [[ ! -f "$target/CLAUDE.md" ]]; then
     cp "$TEMPLATES_DIR/CLAUDE.md.template" "$target/CLAUDE.md"
-    info "  + CLAUDE.md (template — run 'clawbo setup' to configure)"
+    info "  + CLAUDE.md (template — run 'collalog setup' to configure)"
   else
     warn "  ~ CLAUDE.md (exists, skipped)"
   fi
 
-  # Write clawlaborate config
+  # Write config
   cat > "$target/.clawlaborate/config.yaml" <<YAML
 # clawlaborate configuration
 version: "${VERSION}"
@@ -237,27 +195,25 @@ language: "${lang}"
 initialized: "$(date -Iseconds)"
 template_source: "${ROOT_DIR}"
 
-# Project settings (populated by 'clawbo setup')
+# Project settings (populated by 'collalog setup')
 project:
   name: ""
   description: ""
   team: []
-  directories: []
 YAML
 
   echo ""
   log "Done! Project initialized with clawlaborate."
   echo ""
   log "Structure:"
+  info "  collalog/               Log, tasks, project info (user-facing)"
   info "  $commands_dir/     Skills (agent reads these)"
-  info "  .clawlaborate/          Config, memory, logs, prompts"
-  info "  0 Inbox/                Quick captures (for humans)"
-  info "  1 Project/              Tasks and planning (for humans)"
+  info "  .clawlaborate/          Templates, prompts, config (fixed)"
   info "  CLAUDE.md               Main agent prompt"
   echo ""
   log "Next steps:"
   log "  1. cd $target"
-  log "  2. clawbo setup    # Configure project details"
+  log "  2. collalog setup    # Configure project details"
   log "  3. Set up scheduled tasks (heartbeat + morning briefing)"
   echo ""
 }
@@ -265,27 +221,22 @@ YAML
 # ─── SETUP ─────────────────────────────────────────────────────────────────
 
 cmd_setup() {
-  # Check if initialized
   if [[ ! -d ".clawlaborate" ]]; then
-    error "Not a clawlaborate project. Run 'clawbo init' first."
+    error "Not a clawlaborate project. Run 'collalog init' first."
     exit 1
   fi
 
   log "Project Setup Wizard"
   echo ""
 
-  # Project name
   read -rp "Project name: " project_name
   [[ -z "$project_name" ]] && { error "Project name required."; exit 1; }
 
-  # Project description
   read -rp "Short description (1 line): " project_desc
 
-  # Language
   read -rp "Primary language [en]: " project_lang
   project_lang="${project_lang:-en}"
 
-  # Team members
   echo ""
   info "Team Members (press Enter when done)"
   local -a team_names=()
@@ -303,26 +254,17 @@ cmd_setup() {
     ((i++))
   done
 
-  # Additional directories
-  echo ""
-  read -rp "Additional directories (comma-separated, e.g., 'Research,Content'): " extra_dirs
-
-  # Technologies
   read -rp "Key technologies (comma-separated): " tech_stack
-
-  # Communication platform
   read -rp "Communication platform (e.g., Slack, WhatsApp, Teams): " comm_platform
 
   echo ""
   log "Generating project configuration..."
 
-  # Read existing config values
   local agent=$(grep '^agent:' ".clawlaborate/config.yaml" 2>/dev/null | head -1 | awk '{print $2}' | tr -d '"' || echo 'claude')
   local commands_dir=$(grep '^commands_dir:' ".clawlaborate/config.yaml" 2>/dev/null | head -1 | sed 's/^commands_dir: "//' | tr -d '"' || get_commands_dir "$agent")
   local initialized=$(grep '^initialized:' ".clawlaborate/config.yaml" 2>/dev/null | head -1 | sed 's/^initialized: "//' | tr -d '"' || date -Iseconds)
   local template_source=$(grep '^template_source:' ".clawlaborate/config.yaml" 2>/dev/null | head -1 | sed 's/^template_source: "//' | tr -d '"' || echo '')
 
-  # Update config.yaml
   local config=".clawlaborate/config.yaml"
   cat > "$config" <<YAML
 # clawlaborate configuration
@@ -351,41 +293,22 @@ YAML
 YAML
   done
 
-  # Create additional directories
-  if [[ -n "$extra_dirs" ]]; then
-    local dir_num=2
-    IFS=',' read -ra DIRS <<< "$extra_dirs"
-    for dir in "${DIRS[@]}"; do
-      dir=$(echo "$dir" | xargs)
-      local full_dir="$dir_num $dir"
-      if [[ ! -d "$full_dir" ]]; then
-        mkdir -p "$full_dir"
-        info "  + $full_dir/"
-      fi
-      ((dir_num++))
-    done
-  fi
-
-  # Generate CLAUDE.md from config
-  log "Generating CLAUDE.md..."
+  # Generate files from config
+  log "Generating files..."
   source "$LIB_DIR/generate.sh"
   generate_claude_md "$config" "CLAUDE.md"
-
-  # Update memory files with project info
-  log "Updating memory files..."
-  generate_project_memory "$config" ".clawlaborate/memory/project.md"
-  generate_contacts_memory "$config" ".clawlaborate/memory/contacts.md"
-  generate_tasks "$config" "1 Project/tasks.md"
+  generate_project_md "$config" "collalog/project.md"
+  generate_tasks "$config" "collalog/tasks.md"
 
   echo ""
   log "Setup complete!"
   log "Your project '${project_name}' is ready."
   echo ""
   log "Files generated:"
-  log "  CLAUDE.md                          Main agent prompt"
-  log "  .clawlaborate/memory/project.md    Project overview"
-  log "  .clawlaborate/memory/contacts.md   Team directory"
-  log "  1 Project/tasks.md                 Task list"
+  info "  CLAUDE.md               Main agent prompt"
+  info "  collalog/project.md     Project description + team"
+  info "  collalog/tasks.md       Task list"
+  info "  collalog/log.md         Unified log (ready for entries)"
   echo ""
   log "Next steps:"
   log "  1. Review and customize CLAUDE.md"
@@ -399,7 +322,7 @@ YAML
 
 cmd_update() {
   if [[ ! -d ".clawlaborate" ]]; then
-    error "Not a clawlaborate project. Run 'clawbo init' first."
+    error "Not a clawlaborate project. Run 'collalog init' first."
     exit 1
   fi
 
@@ -419,7 +342,6 @@ cmd_update() {
   log "Agent: $agent | Commands: $commands_dir"
   echo ""
 
-  # Update skills in agent commands directory
   log "Skills ($commands_dir):"
   for skill in "$source/templates/skills"/*.md; do
     [[ -f "$skill" ]] || continue
@@ -433,18 +355,15 @@ cmd_update() {
       cp "$skill" "$stored" 2>/dev/null || true
       info "  + $target_name (new)"
     elif [[ -f "$stored" ]] && diff -q "$skill" "$stored" > /dev/null 2>&1; then
-      # Template hasn't changed upstream
       info "  = $target_name (unchanged)"
     elif diff -q "$skill" "$target" > /dev/null 2>&1; then
-      # File matches upstream but stored template is old — update stored
       cp "$skill" "$stored" 2>/dev/null || true
       info "  = $target_name (up to date)"
     else
-      warn "  ~ $target_name (differs — use 'clawbo sync' to review)"
+      warn "  ~ $target_name (differs — use 'collalog sync' to review)"
     fi
   done
 
-  # Update prompts
   echo ""
   log "Prompts (.clawlaborate/prompts):"
   for prompt in "$source/templates/prompts"/*.md; do
@@ -460,11 +379,10 @@ cmd_update() {
     elif [[ -f "$stored" ]] && diff -q "$prompt" "$stored" > /dev/null 2>&1; then
       info "  = $name (unchanged)"
     else
-      warn "  ~ $name (differs — use 'clawbo sync' to review)"
+      warn "  ~ $name (differs — use 'collalog sync' to review)"
     fi
   done
 
-  # Update stored templates
   cp "$source/templates/skills"/*.md ".clawlaborate/templates/skills/" 2>/dev/null || true
   cp "$source/templates/prompts"/*.md ".clawlaborate/templates/prompts/" 2>/dev/null || true
 
@@ -497,7 +415,6 @@ cmd_sync() {
 
   local has_diff=false
 
-  # Compare skills
   info "Skills ($commands_dir):"
   for skill in "$source/templates/skills"/*.md; do
     [[ -f "$skill" ]] || continue
@@ -519,18 +436,15 @@ cmd_sync() {
     fi
   done
 
-  # Check for project-only skills
-  for file in "$commands_dir"/clawbo.*; do
+  for file in "$commands_dir"/collalog.*; do
     [[ -f "$file" ]] || continue
     local name=$(basename "$file")
-    # Extract skill name from agent-specific filename
-    local skill_name=$(echo "$name" | sed 's/^clawbo\.\(.*\)\.\(md\|toml\|agent\.md\)$/\1/')
+    local skill_name=$(echo "$name" | sed 's/^collalog\.\(.*\)\.\(md\|toml\|agent\.md\)$/\1/')
     if [[ ! -f "$source/templates/skills/${skill_name}.md" ]]; then
       info "  [project-only] $name"
     fi
   done
 
-  # Compare prompts
   echo ""
   info "Prompts (.clawlaborate/prompts):"
   for prompt in "$source/templates/prompts"/*.md; do
@@ -556,7 +470,7 @@ cmd_sync() {
   if [[ "$has_diff" == false ]]; then
     log "Everything in sync."
   else
-    log "Use 'clawbo update' to pull latest templates."
+    log "Use 'collalog update' to pull latest templates."
   fi
 }
 
@@ -565,7 +479,6 @@ cmd_sync() {
 AGENT="claude"
 LANG_OPT="en"
 
-# Parse global options
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --agent)  AGENT="$2"; shift 2 ;;

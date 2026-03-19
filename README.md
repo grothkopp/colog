@@ -2,28 +2,30 @@
 
 **Make collaboration part of your repo, not another tool.**
 
-clawlaborate adds structured collaboration to any project through your AI coding agent. Instead of switching between Slack, Jira, Notion, and your IDE, the agent tracks tasks, logs decisions, maintains project memory, and keeps everyone in sync — all in plain Markdown files inside your git repository.
+clawlaborate adds structured collaboration to any project through your AI coding agent. Instead of switching between Slack, Jira, Notion, and your IDE, the agent tracks everything in a single unified log — decisions, tasks, changes, ideas — all in plain Markdown inside your git repository.
 
 Every team member keeps using their preferred tool. The AI agent handles the overhead.
 
-## Why
+## The Idea
 
-Most collaboration overhead isn't the actual work — it's the meta-work: updating task boards, writing meeting notes, documenting decisions, keeping everyone informed. This is exactly what AI agents are good at.
+Most collaboration overhead isn't the actual work — it's the meta-work: updating task boards, writing meeting notes, documenting decisions, keeping everyone informed.
 
-clawlaborate gives your agent the skills and structure to:
+clawlaborate replaces all of that with one concept: a **unified log**.
 
-- **Track tasks** with owners and status — right in the repo
-- **Log decisions** (lightweight ADRs) — who decided what, when, and why
-- **Maintain project memory** — context that survives between sessions
-- **Write changelogs** automatically — what changed and why
-- **Run daily briefings** — everyone starts the day aligned
-- **Commit everything to git** — full history, no lock-in
+Every project event — a decision made, a task created, an idea proposed, a file changed — becomes a log entry. The agent reads and writes this log automatically. Tasks and project memory are just snapshots derived from the log.
 
-It works with any AI coding tool: Claude Code, Codex, Cursor, Gemini, Windsurf, Copilot, and more. Skills are installed where your tool expects them.
+```
+collalog/log.md         ← the source of truth (all events, newest first)
+collalog/tasks.md       ← snapshot: what's open, who owns it
+collalog/project.md     ← project description, team, config
+collalog/memory.md      ← optional: condensed project context
+```
+
+It works with any AI coding tool: Claude Code, Codex, Cursor, Gemini, Windsurf, Copilot, and 6 more. Skills are installed where your tool expects them.
 
 ## Quick Start
 
-### 1. Install clawlaborate
+### 1. Install
 
 ```bash
 git clone https://github.com/grothkopp/clawlaborate.git
@@ -34,134 +36,120 @@ export PATH="$PATH:$(pwd)/clawlaborate/bin"
 
 ```bash
 cd my-project
-clawbo init .
+collalog init .
 
 # For a different AI tool:
-clawbo --agent codex init .
-clawbo --agent cursor init .
+collalog --agent codex init .
+collalog --agent cursor init .
 ```
 
 This creates:
-- Skills in your agent's commands directory (e.g., `.claude/commands/clawbo.*.md`)
-- `.clawlaborate/` with config, memory, logs, and prompts
-- `0 Inbox/` and `1 Project/` for human-facing documents
+- `collalog/` with log, tasks, and project files
+- Skills in your agent's commands directory (e.g., `.claude/commands/collalog.*.md`)
+- `.clawlaborate/` with templates, prompts, and config
 - `CLAUDE.md` as the main agent prompt
 
 ### 3. Configure your project
 
 ```bash
-clawbo setup
+collalog setup
 ```
 
-The setup wizard asks for:
-- Project name and description
-- Team members (name, shortcut like @SG, role)
-- Technologies and communication platform
-- Additional directories
-
-This generates a customized `CLAUDE.md`, populates memory files, and creates your task list.
+The wizard asks for project name, description, team members (name + shortcut + role), technologies, and communication platform. It generates a customized `CLAUDE.md` and populates `collalog/project.md` and `collalog/tasks.md`.
 
 ### 4. Set up scheduled tasks
 
 Configure these in your agent platform (Claude Code, OpenClaw, etc.):
 
-- **Heartbeat** (every 30 min): Agent monitors conversations and updates tasks, decisions, memory. See `.clawlaborate/prompts/heartbeat.md`
-- **Morning briefing** (daily 8:00): Agent sends a summary of open tasks, recent changes, and decisions. See `.clawlaborate/prompts/morning.md`
+- **Heartbeat** (every 30 min): Agent monitors conversations, updates log and tasks. See `.clawlaborate/prompts/heartbeat.md`
+- **Morning briefing** (daily 8:00): Agent sends a summary of open tasks and recent activity. See `.clawlaborate/prompts/morning.md`
 
-### 5. Commit and go
+### 5. Work
 
 ```bash
-git add -A
-git commit -m "org: initialize project with clawlaborate"
+git add -A && git commit -m "org: initialize project with clawlaborate"
 ```
 
 Start working. The agent will:
-- Pick up tasks from conversations and add them to `1 Project/tasks.md`
-- Log decisions to `.clawlaborate/logs/decisions.md` (ADR-style)
-- Track changes in `.clawlaborate/logs/changelog.md`
-- Keep project context in `.clawlaborate/memory/`
+- Log decisions, changes, ideas, and tasks to `collalog/log.md`
+- Keep `collalog/tasks.md` in sync as a task snapshot
 - Commit changes to git automatically
+- Send a morning briefing daily
+
+## Log Entry Types
+
+| Type | Use for |
+|------|---------|
+| change | File created, modified, deleted |
+| decision | Direction chosen, convention agreed |
+| task | Task created, completed, reassigned |
+| idea | Proposal, suggestion, something to explore |
+| note | Context, observation, meeting summary |
+| milestone | Phase completed, goal reached |
+
+Each entry has: timestamp, author (@shortcut), type, title, description, and optional fields (affected files, related tasks).
 
 ## Project Structure
 
 ```
 my-project/
-├── .clawlaborate/                   # Agent workspace
-│   ├── config.yaml                  # Project configuration
-│   ├── memory/                      # Project knowledge base
-│   │   ├── project.md               #   Vision, status, tech stack
-│   │   ├── topics.md                #   Subject areas, open questions
-│   │   └── contacts.md              #   Team directory
-│   ├── logs/                        # Change and decision history
-│   │   ├── changelog.md             #   What changed and why
-│   │   └── decisions.md             #   ADR-style decision records
-│   ├── prompts/                     # Scheduled agent behaviors
-│   │   ├── heartbeat.md             #   Every 30 min check-in
-│   │   └── morning.md               #   Daily briefing
-│   └── templates/                   # Original templates (for sync)
+├── collalog/                        # User-facing (all mutable content)
+│   ├── log.md                       #   Unified log (source of truth)
+│   ├── tasks.md                     #   Task snapshot
+│   ├── project.md                   #   Project description + team
+│   └── memory.md                    #   Optional memory snapshot
 ├── .claude/commands/                # Skills (Claude Code example)
-│   ├── clawbo.git.md
-│   ├── clawbo.changelog.md
-│   ├── clawbo.decision-log.md
-│   ├── clawbo.task-management.md
-│   ├── clawbo.memory.md
-│   └── clawbo.clawlaborate-sync.md
-├── 0 Inbox/                         # Quick captures (for humans)
-├── 1 Project/                       # Tasks and planning (for humans)
-│   └── tasks.md
+│   ├── collalog.log.md
+│   ├── collalog.git.md
+│   ├── collalog.task-management.md
+│   ├── collalog.memory.md
+│   └── collalog.clawlaborate-sync.md
+├── .clawlaborate/                   # Fixed elements (don't edit)
+│   ├── config.yaml                  #   Configuration
+│   ├── prompts/                     #   Scheduled agent behaviors
+│   └── templates/                   #   Original templates (for sync)
 ├── CLAUDE.md                        # Main agent prompt
 └── .gitignore
 ```
 
-**Convention:** Uppercase+Number folders (`0 Inbox/`, `1 Project/`) are for humans. Dot-folders (`.clawlaborate/`, `.claude/`) are for the agent.
+**Convention:** `collalog/` is for humans and agents (read + write). `.clawlaborate/` is infrastructure (don't edit directly).
 
 ## Supported Agents
 
 | Agent | Commands Directory | File Pattern |
 |-------|--------------------|--------------|
-| Claude Code | `.claude/commands/` | `clawbo.*.md` |
-| Codex | `.codex/prompts/` | `clawbo.*.md` |
-| Cursor | `.cursor/commands/` | `clawbo.*.md` |
-| Gemini CLI | `.gemini/commands/` | `clawbo.*.toml` |
-| Windsurf | `.windsurf/workflows/` | `clawbo.*.md` |
-| GitHub Copilot | `.github/agents/` | `clawbo.*.agent.md` |
-| Kilo Code | `.kilocode/workflows/` | `clawbo.*.md` |
-| Roo | `.roo/commands/` | `clawbo.*.md` |
-| OpenCode | `.opencode/command/` | `clawbo.*.md` |
-| Kiro CLI | `.kiro/prompts/` | `clawbo.*.md` |
-| Amp | `.agents/commands/` | `clawbo.*.md` |
-| OpenClaw | `.clawlaborate/skills/` | `clawbo.*.md` |
+| Claude Code | `.claude/commands/` | `collalog.*.md` |
+| Codex | `.codex/prompts/` | `collalog.*.md` |
+| Cursor | `.cursor/commands/` | `collalog.*.md` |
+| Gemini CLI | `.gemini/commands/` | `collalog.*.toml` |
+| Windsurf | `.windsurf/workflows/` | `collalog.*.md` |
+| GitHub Copilot | `.github/agents/` | `collalog.*.agent.md` |
+| Kilo Code | `.kilocode/workflows/` | `collalog.*.md` |
+| Roo | `.roo/commands/` | `collalog.*.md` |
+| OpenCode | `.opencode/command/` | `collalog.*.md` |
+| Kiro CLI | `.kiro/prompts/` | `collalog.*.md` |
+| Amp | `.agents/commands/` | `collalog.*.md` |
+| OpenClaw | `.clawlaborate/skills/` | `collalog.*.md` |
 
 ## Commands
 
 ```bash
-clawbo init [path]         # Initialize a new project
-clawbo setup               # Interactive project configuration
-clawbo update              # Pull latest templates (won't overwrite customizations)
-clawbo sync                # Show differences between project and templates
-clawbo version             # Show version
+collalog init [path]       # Initialize a new project
+collalog setup             # Interactive project configuration
+collalog update            # Pull latest templates (won't overwrite customizations)
+collalog sync              # Show differences between project and templates
+collalog version           # Show version
 ```
 
 **Options:**
 - `--agent <type>` — AI tool (default: `claude`). See supported agents above.
 - `--lang en|de` — Language for generated files (default: `en`)
 
-## Updating Templates
-
-When clawlaborate gets new skills or improvements:
+## Updating
 
 ```bash
-cd my-project
-clawbo update    # Pulls new templates, flags modified files
-clawbo sync      # Shows diffs for review
-```
-
-When you improve a skill in your project and want to contribute it back:
-
-```bash
-clawbo sync      # See what changed vs. templates
-# Copy improved files to your clawlaborate clone's templates/ directory
-# Commit and push clawlaborate
+collalog update    # Pulls new templates, flags modified files
+collalog sync      # Shows diffs for review
 ```
 
 ## License

@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # generate.sh — Template generation functions for clawlaborate
 
-# Parse YAML value (simple key: value extraction, indented)
 yaml_val() {
   local file="$1" key="$2"
   grep "^  $key:" "$file" 2>/dev/null | head -1 | sed 's/.*: "//' | tr -d '"' || echo ""
@@ -12,7 +11,6 @@ yaml_top_val() {
   grep "^$key:" "$file" 2>/dev/null | head -1 | sed 's/.*: "//' | tr -d '"' || echo ""
 }
 
-# Extract team members from config
 get_team() {
   local file="$1"
   grep -A2 '- name:' "$file" 2>/dev/null | paste -d'|' - - - | \
@@ -52,17 +50,23 @@ CLAUDE_INNER
 
   cat >> "$output" << CLAUDE_INNER
 
+## Unified Log
+
+The central project log lives at \`collalog/log.md\`. Every meaningful event
+(changes, decisions, tasks, ideas, notes, milestones) gets a log entry here.
+Newest entries first.
+
 ## Skills
 
-The agent uses skills from \`${commands_dir:-".claude/commands"}/\`:
+Skills are installed in \`${commands_dir:-".claude/commands"}/\`:
 
 | Skill | Description |
 |-------|-------------|
+| log | Unified log format and entry types |
 | git | Version control conventions and commit format |
-| changelog | Document tracking and change logging |
-| decision-log | Decision documentation with rationale (ADR-style) |
-| task-management | Shared task list management |
-| memory | Project knowledge and context maintenance |
+| task-management | Task list as snapshot of the log |
+| memory | Optional project memory snapshot |
+| clawlaborate-sync | Sync skills with clawlaborate templates |
 
 ## Prompts
 
@@ -70,38 +74,38 @@ Scheduled agent behaviors in \`.clawlaborate/prompts/\`:
 
 | Prompt | Schedule | Description |
 |--------|----------|-------------|
-| heartbeat | Every 30 min | Monitor conversations, update tasks/decisions/memory |
-| morning | Daily 8:00 | Daily summary: tasks, changes, decisions |
+| heartbeat | Every 30 min | Update log, tasks, memory from conversations |
+| morning | Daily 8:00 | Daily summary: tasks, log activity, blockers |
 
 ## Workspace Structure
 
 \`\`\`
+collalog/
+  log.md               Unified project log (the source of truth)
+  tasks.md             Task snapshot (derived from log)
+  project.md           Project description, team, config
+  memory.md            Optional project memory snapshot
+${commands_dir:-".claude/commands"}/
+  collalog.*.md        Skills (agent reads these)
 .clawlaborate/
-  config.yaml          Project configuration
-  memory/              Project knowledge base
-  logs/                Changelog and decision log
+  config.yaml          Configuration
   prompts/             Scheduled agent behaviors
   templates/           Original templates (for sync)
-${commands_dir:-".claude/commands"}/
-  clawbo.*.md          Skills (agent reads these)
-0 Inbox/               Quick captures, unsorted
-1 Project/             Tasks, planning
 CLAUDE.md              This file
 \`\`\`
+
+## Communication
 CLAUDE_INNER
 
-  echo "" >> "$output"
-  echo "## Communication" >> "$output"
-  echo "" >> "$output"
-
   if [[ -n "$comm" ]]; then
+    echo "" >> "$output"
     echo "Primary channel: ${comm}" >> "$output"
   fi
 
   cat >> "$output" << 'CLAUDE_INNER'
 
 The agent communicates with the team through the configured messaging platform.
-When updating shared documents, always follow the changelog and git skills.
+All significant interactions should be logged in collalog/log.md.
 
 ## Formatting
 
@@ -122,47 +126,27 @@ CLAUDE_INNER
   fi
 }
 
-# ─── Memory Generators ──────────────────────────────────────────────────────
+# ─── Collalog File Generators ────────────────────────────────────────────────
 
-generate_project_memory() {
+generate_project_md() {
   local config="$1" output="$2"
   local name=$(yaml_val "$config" "name")
   local desc=$(yaml_val "$config" "description")
   local tech=$(yaml_val "$config" "technologies")
-  local lang=$(yaml_val "$config" "language")
+  local comm=$(yaml_val "$config" "communication")
 
-  cat > "$output" << MEM_INNER
+  cat > "$output" << PROJECT_INNER
 # Project: ${name}
 
-## Vision
+## Description
+
 ${desc}
-
-## Status
-- Phase: Setup
-- Started: $(date +%Y-%m-%d)
-
-## Technologies
-${tech:-TBD}
-
-## Infrastructure
-- Version control: Git
-- Language: ${lang}
-
-## Notes
-MEM_INNER
-}
-
-generate_contacts_memory() {
-  local config="$1" output="$2"
-
-  cat > "$output" << 'MEM_INNER'
-# Contacts
 
 ## Team
 
 | Name | Shortcut | Role |
 |------|----------|------|
-MEM_INNER
+PROJECT_INNER
 
   while IFS='|' read -r tname tshort trole; do
     [[ -z "$tname" ]] && continue
@@ -173,7 +157,13 @@ MEM_INNER
   done < <(get_team "$config")
 
   echo "" >> "$output"
-  echo "## External Contacts" >> "$output"
+  echo "## Technologies" >> "$output"
+  echo "" >> "$output"
+  echo "${tech:-TBD}" >> "$output"
+  echo "" >> "$output"
+  echo "## Communication" >> "$output"
+  echo "" >> "$output"
+  echo "${comm:-TBD}" >> "$output"
 }
 
 generate_tasks() {
@@ -187,7 +177,7 @@ generate_tasks() {
 
 ## Setup
 - [ ] Review and customize CLAUDE.md
-- [ ] Review agent skills and prompts
+- [ ] Review agent skills
 - [ ] Set up heartbeat task (every 30 min)
 - [ ] Set up morning briefing task (daily 8:00)
 - [ ] Initial git commit
@@ -195,8 +185,6 @@ generate_tasks() {
 ## Content
 
 ## Research
-
-## Organization
 
 ## Tech
 TASKS_INNER

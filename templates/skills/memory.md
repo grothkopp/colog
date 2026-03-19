@@ -1,49 +1,46 @@
 # Skill: Memory
 
-Maintain project knowledge in `.clawlaborate/memory/`.
+Maintain an optional project memory snapshot at `collalog/memory.md`.
 
-## Memory Files
+Memory is a condensed, current-state view of the project — derived from the log
+but organized for quick reference. Think of it as the "cheat sheet" for the project.
 
-| File | Purpose |
-|------|---------|
-| project.md | Project vision, status, infrastructure, key decisions |
-| topics.md | Subject areas, themes, open questions |
-| contacts.md | Team members, external contacts, roles |
+## When to Create
 
-## When to Update
+Memory is optional. Create `collalog/memory.md` when:
+- The log grows long and context gets hard to find
+- The project has established patterns worth documenting
+- New team members need a quick onboarding reference
 
-- New information about the project, its goals, or its direction
-- New team member or external contact
-- A topic is added, refined, or completed
-- Status changes (phase transitions, milestones)
-
-## Example
-
-A `project.md` update after a milestone:
+## Structure
 
 ```markdown
-## Status
-- Phase: Development (was: Setup)
-- Started: 2026-03-01
-- MVP target: 2026-05-15
+# Memory
 
-## Technologies
-TypeScript, React, PostgreSQL, Vercel
-```
+## Project
+- Vision: [one line]
+- Phase: [current phase]
+- Tech stack: [key technologies]
 
-A `contacts.md` addition:
+## Team
+| Name | Shortcut | Role | Notes |
+|------|----------|------|-------|
 
-```markdown
-## External Contacts
+## Key Decisions
+- [date] Decision title — brief rationale
+- [date] Decision title — brief rationale
 
-| Name | Company | Role | Notes |
-|------|---------|------|-------|
-| Maria Schmidt | DesignCo | UX Designer | Freelance, available Tue+Thu |
+## Conventions
+- [conventions the team follows]
+
+## Open Questions
+- [things not yet decided]
 ```
 
 ## Rules
 
-- Keep memory files factual and current — no speculation
-- Every memory update gets a changelog entry and git commit (type: memory)
+- Memory is a snapshot, not a log — keep it current, not historical
+- When facts change, update memory directly (don't append)
+- The log is the source of truth; memory is a convenience layer
+- Every memory update gets a log entry (type: change) and git commit
 - Remove outdated information rather than marking it as old
-- Memory files are the agent's long-term context — treat them as the source of truth

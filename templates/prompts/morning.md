@@ -1,7 +1,7 @@
 # Prompt: Morning Briefing
 
 > Schedule: Daily, weekdays at 8:00
-> Skills: task-management, git, decision-log
+> Skills: log, task-management, git
 
 ## Purpose
 
@@ -9,10 +9,11 @@ Start the day with a clear picture of what's happening and what needs attention.
 
 ## Steps
 
-1. **Collect open tasks** — Read `1 Project/tasks.md`, group by owner
-2. **Check recent changes** — Run `git log --oneline --since="24 hours ago"`
-3. **Check recent decisions** — Read last 48h entries from `.clawlaborate/logs/decisions.md`
-4. **Send summary** to the team:
+1. **Read project context** — `collalog/project.md` for team and goals
+2. **Collect open tasks** — `collalog/tasks.md`, group by owner
+3. **Read recent log entries** — Last 24-48h from `collalog/log.md`
+4. **Check git activity** — `git log --oneline --since="24 hours ago"`
+5. **Send summary** to the team:
 
 ```
 Good morning! Here's today's overview:
@@ -22,19 +23,16 @@ Good morning! Here's today's overview:
 @Person2: [list their tasks]
 Unassigned: [list if any]
 
-**Recent Changes** (last 24h)
-- [commit summaries]
-
-**Recent Decisions**
-- [decision summaries, if any]
+**Recent Activity** (last 24h from the log)
+- [decisions, changes, ideas worth highlighting]
 
 **Upcoming**
-- [deadlines, meetings, or milestones if known]
+- [deadlines, milestones, or blockers]
 ```
 
 ## Important
 
-- Keep it concise — this should take 30 seconds to read
-- Skip sections that have nothing to report
+- Keep it concise — 30 seconds to read
+- Skip sections with nothing to report
 - Flag overdue or blocked tasks explicitly
-- If there are no tasks, changes, or decisions, send a short "all clear" instead of the full template
+- If everything is quiet, send a short "all clear" instead

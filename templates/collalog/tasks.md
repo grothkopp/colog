@@ -4,7 +4,7 @@
 
 ## Setup
 - [ ] Review and customize CLAUDE.md
-- [ ] Review agent skills in commands directory
+- [ ] Review agent skills
 - [ ] Set up heartbeat task (every 30 min)
 - [ ] Set up morning briefing task (daily 8:00)
 - [ ] Initial git commit
@@ -12,7 +12,5 @@
 ## Content
 
 ## Research
-
-## Organization
 
 ## Tech

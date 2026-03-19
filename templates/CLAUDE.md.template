@@ -8,20 +8,25 @@ _Short project description_
 |------|----------|------|
 | | | |
 
-> Run `clawbo setup` to configure this file.
+> Run `collalog setup` to configure this file.
+
+## Unified Log
+
+The central project log lives at `collalog/log.md`. Every meaningful event
+(changes, decisions, tasks, ideas, notes, milestones) gets a log entry here.
+Newest entries first.
 
 ## Skills
 
 Skills are installed in the agent-specific commands directory (e.g., `.claude/commands/`).
-See `.clawlaborate/templates/` for the originals.
 
 | Skill | Description |
 |-------|-------------|
+| log | Unified log format and entry types |
 | git | Version control conventions and commit format |
-| changelog | Document tracking and change logging |
-| decision-log | Decision documentation with rationale (ADR-style) |
-| task-management | Shared task list management |
-| memory | Project knowledge and context maintenance |
+| task-management | Task list as snapshot of the log |
+| memory | Optional project memory snapshot |
+| clawlaborate-sync | Sync skills with clawlaborate templates |
 
 ## Prompts
 
@@ -29,28 +34,29 @@ Scheduled agent behaviors in `.clawlaborate/prompts/`:
 
 | Prompt | Schedule | Description |
 |--------|----------|-------------|
-| heartbeat | Every 30 min | Monitor conversations, update tasks/decisions/memory |
-| morning | Daily 8:00 | Daily summary: tasks, changes, decisions |
+| heartbeat | Every 30 min | Update log, tasks, memory from conversations |
+| morning | Daily 8:00 | Daily summary: tasks, log activity, blockers |
 
 ## Workspace Structure
 
 ```
+collalog/
+  log.md               Unified project log (the source of truth)
+  tasks.md             Task snapshot (derived from log)
+  project.md           Project description, team, config
+  memory.md            Optional project memory snapshot
+.claude/commands/      Skills (agent reads these)
 .clawlaborate/
-  config.yaml          Project configuration
-  memory/              Project knowledge base
-  logs/                Changelog and decision log
+  config.yaml          Configuration
   prompts/             Scheduled agent behaviors
   templates/           Original templates (for sync)
-.claude/commands/      Skills (agent reads these)
-0 Inbox/               Quick captures, unsorted
-1 Project/             Tasks, planning
 CLAUDE.md              This file
 ```
 
 ## Communication
 
 The agent communicates with the team through the configured messaging platform.
-When updating shared documents, always follow the changelog and git skills.
+All significant interactions should be logged in collalog/log.md.
 
 ## Formatting
 
