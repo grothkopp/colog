@@ -15,8 +15,8 @@ Start the day with a clear picture of what's happening and what needs attention.
 3. **Read current user** — `collalog/me.md` for the current user's shortcut (highlight their tasks first)
 4. **Collect open tasks** — `collalog/tasks.md`, group by owner (current user first)
 5. **Read recent log entries** — Last 24-48h from `collalog/log.md`
-6. **Check git activity** — `git log --oneline --since="24 hours ago"`
-7. **Commit** cleanup changes if any tasks were removed
+6. **Check git activity** (only if git enabled in `collalog/project.md` → `## Git`) — `git log --oneline --since="24 hours ago"`
+7. **Commit** cleanup changes if any tasks were removed (only if git enabled)
 8. **Send summary** to the team:
 
 ```

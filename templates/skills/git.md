@@ -2,6 +2,12 @@
 
 Rules for version control in collalog projects.
 
+## Git Enabled Check
+
+Before running any git commands, read `collalog/project.md` and check the
+`## Git` section. If `Enabled: no`, skip ALL git operations silently.
+Do not warn or remind the user — just skip.
+
 ## Commit Format
 
 ```

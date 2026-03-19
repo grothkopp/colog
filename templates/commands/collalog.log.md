@@ -27,7 +27,7 @@ The user tells you what to log. You create a properly formatted entry.
 5. Write the entry to the TOP of `collalog/log.md` (newest first)
 6. If it's a [task]: also add to `collalog/tasks.md` with `created: YYYY-MM-DD HH:MM`
 7. If it's a [decision]: note alternatives if the user mentioned them
-8. Commit with the entry type: `<type>: <title>`
+8. If git is enabled (check `collalog/project.md` → `## Git`): commit with the entry type `<type>: <title>`
 
 ## Entry Format
 

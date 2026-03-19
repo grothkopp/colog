@@ -31,15 +31,16 @@ Ask the user: "This repo has existing history. Want me to seed the log from git 
    - Team members (name, shortcut like @SG, role) — keep asking until user says done
    - Key technologies
    - Communication platform (Slack, WhatsApp, Teams, etc.)
+   - **Use git?** "Should collalog use git for version control? (yes/no, default: yes)" — auto-detect: if not in a git repo, suggest "no"
 3. **Identify current user** (see section below)
-4. If existing repo: offer to import history
+4. If git enabled and existing repo: offer to import history
 5. Write `collalog/project.md`
 6. Write `collalog/me.md` with the current user's info
 7. Write initial `collalog/tasks.md` with setup tasks
 8. If importing: write initial entries to `collalog/log.md`
 9. Log the setup itself as a [milestone] entry
 10. **Set up scheduled tasks** (see section below)
-11. Commit with: `org: collalog setup complete`
+11. If git enabled: commit with `org: collalog setup complete`
 
 ## User Identity (me.md)
 
@@ -104,6 +105,16 @@ Then create the scheduled tasks:
 - Prompt: Check for new activity, update log and tasks, commit changes (see `.collalog/prompts/heartbeat.md`).
 
 Store the schedule configuration in `collalog/project.md` under a "## Schedule" section so the user can review and the agent can reference it.
+
+Store the git setting in `collalog/project.md` under a "## Git" section:
+
+```markdown
+## Git
+
+- Enabled: yes
+```
+
+If git is disabled, set `Enabled: no`. All commands, skills, and prompts check this setting before running any git commands.
 
 Example project.md schedule section:
 ```markdown

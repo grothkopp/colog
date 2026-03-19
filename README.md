@@ -89,10 +89,10 @@ Installed in the agent's commands directory. You trigger these explicitly.
 
 | Command | What it does |
 |---------|-------------|
-| `/collalog:setup` | One-time project setup. Asks questions, populates project.md, imports from git log |
+| `/collalog:setup` | One-time project setup. Asks questions, populates project.md, optionally imports from git log |
 | `/collalog:log` | Manually add a log entry. Infers type from what you say |
-| `/collalog:save` | Detect changes, create log entries, commit |
-| `/collalog:status` | Show open tasks, recent activity, git status |
+| `/collalog:save` | Detect changes, create log entries, commit (if git enabled) |
+| `/collalog:status` | Show open tasks, recent activity, git status (if git enabled) |
 
 ### Skills (agent rules)
 
@@ -167,6 +167,10 @@ collalog version           # Show version
 ```
 
 **Options:** `--agent <type>` (default: claude), `--lang en|de`
+
+## Git is Optional
+
+collalog works with or without git. During setup, you're asked whether to use git. If disabled (`Enabled: no` in `collalog/project.md`), all git operations (commits, status, log) are skipped. The unified log still works — it just doesn't auto-commit.
 
 ## License
 

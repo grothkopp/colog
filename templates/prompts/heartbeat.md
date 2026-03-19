@@ -24,7 +24,7 @@ hours, do nothing and exit silently.
    - Files changed? -> Log entry [change]
    - New information? -> Log entry [note] and optionally update `collalog/memory.md`
 4. **Update the log** — Add entries to `collalog/log.md` (newest first)
-5. **Commit** — If files changed, commit to git (skill: git)
+5. **Commit** — If files changed AND git is enabled (check `collalog/project.md` → `## Git`): commit to git (skill: git). If git disabled: skip.
 6. **Notify** — Only message the team if something requires their attention
    - Do NOT send "nothing to report" messages
 

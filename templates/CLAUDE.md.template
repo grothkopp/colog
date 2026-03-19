@@ -10,6 +10,11 @@ _Short project description_
 
 > Run `/collalog:setup` to configure this file.
 
+## Git
+
+Check `collalog/project.md` → `## Git` → `Enabled:` before running any git command.
+If `Enabled: no`, skip ALL git operations (commits, status, log, push) silently.
+
 ## Unified Log
 
 The central project log lives at `collalog/log.md`. Every meaningful event

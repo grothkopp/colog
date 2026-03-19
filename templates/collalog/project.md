@@ -22,6 +22,10 @@ _Key technologies used_
 
 _Primary communication channel_
 
+## Git
+
+- Enabled: yes
+
 ## Schedule
 
 - Morning briefing: 08:00, weekdays

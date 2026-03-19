@@ -13,7 +13,7 @@ Show a quick overview of the current project state.
 1. **Read project info**: `collalog/project.md` for team and description
 2. **Open tasks**: `collalog/tasks.md` — list open tasks grouped by owner
 3. **Recent activity**: Last 5-10 entries from `collalog/log.md`
-4. **Git status**: Uncommitted changes, unpushed commits
+4. **Git status** (only if git enabled in project.md → `## Git`): uncommitted changes, unpushed commits
 5. **Format as a concise summary**
 
 ## Output Format
@@ -32,7 +32,7 @@ Unassigned: task4
 - [change] Title (yesterday)
 - [task] Title (2 days ago)
 
-**Git:** 3 uncommitted files, 2 unpushed commits
+**Git:** 3 uncommitted files, 2 unpushed commits  ← only if git enabled
 ```
 
 ## Important

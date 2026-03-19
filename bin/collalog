@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-VERSION="0.5.0"
+VERSION="0.6.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 TEMPLATES_DIR="$ROOT_DIR/templates"
@@ -296,6 +296,17 @@ cmd_setup() {
   read -rp "  Your shortcut (e.g., @SG): " me_shortcut
 
   echo ""
+  local git_enabled="yes"
+  if ! git rev-parse --is-inside-work-tree &>/dev/null; then
+    info "No git repository detected."
+    read -rp "Use git for version control? [no]: " git_answer
+    git_enabled="${git_answer:-no}"
+  else
+    read -rp "Use git for version control? [yes]: " git_answer
+    git_enabled="${git_answer:-yes}"
+  fi
+
+  echo ""
   log "Generating project configuration..."
 
   local agent=$(grep '^agent:' ".collalog/config.yaml" 2>/dev/null | head -1 | awk '{print $2}' | tr -d '"' || echo 'claude')
@@ -313,6 +324,7 @@ language: "${project_lang}"
 initialized: "${initialized}"
 configured: "$(date -Iseconds)"
 template_source: "${template_source}"
+git_enabled: "${git_enabled}"
 
 project:
   name: "${project_name}"
@@ -361,7 +373,9 @@ ME_INNER
   log "Next steps:"
   log "  1. Review CLAUDE.md and collalog/project.md"
   log "  2. Set up scheduled tasks (heartbeat + morning)"
-  log "  3. git add -A && git commit -m 'org: collalog setup complete'"
+  if [[ "$git_enabled" == "yes" ]]; then
+    log "  3. git add -A && git commit -m 'org: collalog setup complete'"
+  fi
 }
 
 # ─── UPDATE ────────────────────────────────────────────────────────────────

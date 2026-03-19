@@ -54,6 +54,11 @@ Read \`collalog/me.md\` for the current user's identity (name, shortcut, email).
 Use the shortcut for log entries and task ownership. This file is local and gitignored.
 If it doesn't exist, ask the user to run \`/collalog:setup\` or use \`@Agent\`.
 
+## Git
+
+Check \`collalog/project.md\` → \`## Git\` → \`Enabled:\` before running any git command.
+If \`Enabled: no\`, skip ALL git operations (commits, status, log, push) silently.
+
 ## Unified Log
 
 The central project log lives at \`collalog/log.md\`. Every meaningful event
@@ -143,6 +148,8 @@ generate_project_md() {
   local desc=$(yaml_val "$config" "description")
   local tech=$(yaml_val "$config" "technologies")
   local comm=$(yaml_val "$config" "communication")
+  local git_enabled=$(yaml_top_val "$config" "git_enabled")
+  git_enabled="${git_enabled:-yes}"
 
   cat > "$output" << PROJECT_INNER
 # Project: ${name}
@@ -173,6 +180,10 @@ PROJECT_INNER
   echo "## Communication" >> "$output"
   echo "" >> "$output"
   echo "${comm:-TBD}" >> "$output"
+  echo "" >> "$output"
+  echo "## Git" >> "$output"
+  echo "" >> "$output"
+  echo "- Enabled: ${git_enabled}" >> "$output"
   echo "" >> "$output"
   echo "## Schedule" >> "$output"
   echo "" >> "$output"

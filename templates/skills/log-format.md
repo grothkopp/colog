@@ -36,7 +36,7 @@ doesn't exist (shared agent or not yet set up), use `@Agent` as the shortcut.
 ## Rules
 
 - Newest entries at the top
-- Every log entry gets a git commit (use entry type as commit type)
+- If git is enabled (check `collalog/project.md` → `## Git`): every log entry gets a git commit (use entry type as commit type). If git is disabled: skip commits.
 - The @Shortcut in the header comes from `collalog/me.md`
 - Be specific and factual — the log is the project's memory
 - Keep entries concise: 2-5 lines of description
