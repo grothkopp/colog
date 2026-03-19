@@ -183,10 +183,10 @@ generate_tasks() {
 > Last updated: $(date +%Y-%m-%d)
 
 ## Setup
-- [ ] Review and customize CLAUDE.md
-- [ ] Set up heartbeat task (every 30 min)
-- [ ] Set up morning briefing task (daily 8:00)
-- [ ] Initial git commit
+- [ ] Review and customize CLAUDE.md (created: $(date '+%Y-%m-%d %H:%M'))
+- [ ] Set up heartbeat task (created: $(date '+%Y-%m-%d %H:%M'))
+- [ ] Set up morning briefing task (created: $(date '+%Y-%m-%d %H:%M'))
+- [ ] Initial git commit (created: $(date '+%Y-%m-%d %H:%M'))
 
 ## Content
 

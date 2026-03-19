@@ -24,7 +24,7 @@ The user tells you what to log. You create a properly formatted entry.
    - [milestone] — "launched", "completed phase", "released"
 3. Ask for clarification only if truly ambiguous
 4. Write the entry to the TOP of `collalog/log.md` (newest first)
-5. If it's a [task]: also add to `collalog/tasks.md`
+5. If it's a [task]: also add to `collalog/tasks.md` with `created: YYYY-MM-DD HH:MM`
 6. If it's a [decision]: note alternatives if the user mentioned them
 7. Commit with the entry type: `<type>: <title>`
 
