@@ -166,6 +166,11 @@ PROJECT_INNER
   echo "## Communication" >> "$output"
   echo "" >> "$output"
   echo "${comm:-TBD}" >> "$output"
+  echo "" >> "$output"
+  echo "## Schedule" >> "$output"
+  echo "" >> "$output"
+  echo "- Morning briefing: 08:00, weekdays" >> "$output"
+  echo "- Heartbeat: every 30 min, 08:00-18:00, weekdays" >> "$output"
 }
 
 generate_tasks() {

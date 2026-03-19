@@ -1,7 +1,8 @@
 # Prompt: Morning Briefing
 
-> Schedule: Daily, weekdays at 8:00
-> Skills: log, task-management, git
+> Schedule: Daily at configured time, weekdays (configured during /collalog:setup)
+> Default: 08:00, weekdays
+> Skills: log-format, task-management, git
 
 ## Purpose
 

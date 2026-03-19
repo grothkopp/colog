@@ -1,11 +1,18 @@
 # Prompt: Heartbeat
 
-> Schedule: Every 30 minutes during working hours
-> Skills: log, task-management, memory, git
+> Schedule: Every N minutes during working hours (configured during /collalog:setup)
+> Default: Every 30 minutes, 08:00-18:00, weekdays
+> Skills: log-format, task-management, memory, git
 
 ## Purpose
 
 Regular check-in to keep the unified log and task list in sync with team activity.
+
+## Working Hours
+
+This prompt should only run during the team's configured working hours.
+Check `collalog/project.md` for the schedule configuration. If outside working
+hours, do nothing and exit silently.
 
 ## Steps
 
@@ -24,7 +31,7 @@ Regular check-in to keep the unified log and task list in sync with team activit
 
 - Log: `collalog/log.md`
 - Tasks: `collalog/tasks.md`
-- Project: `collalog/project.md`
+- Project: `collalog/project.md` (for team info + schedule)
 - Memory: `collalog/memory.md` (optional)
 
 ## Important
@@ -32,3 +39,4 @@ Regular check-in to keep the unified log and task list in sync with team activit
 - This runs automatically — be efficient and quiet
 - Only speak up when there is something actionable or noteworthy
 - When in doubt, log silently and let the morning briefing surface it
+- Respect working hours — no notifications outside configured times
