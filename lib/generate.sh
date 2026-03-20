@@ -13,7 +13,7 @@ yaml_top_val() {
 
 get_team() {
   local file="$1"
-  grep -A2 '- name:' "$file" 2>/dev/null | paste -d'|' - - - | \
+  grep -A2 -- '- name:' "$file" 2>/dev/null | paste -d'|' - - - | \
     sed 's/.*name: "//;s/".*shortcut: "/ | /;s/".*role: "/ | /;s/".*//' || true
 }
 

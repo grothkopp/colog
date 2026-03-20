@@ -1,28 +1,42 @@
 # /colog:setup — Project Setup
 
-One-time setup for a new or existing project. Run this once after `colog init`.
+Setup for a new or existing project. Run this after `colog init`.
+Can be run again on existing projects to update configuration.
 
 ## What This Does
 
 1. Asks for project details (name, description, team, technologies, communication)
 2. Identifies the current user and creates `colog/me.md` (local, gitignored)
-3. Populates `colog/project.md` with the answers
-4. Creates initial task list in `colog/tasks.md`
+3. Creates or updates `colog/project.md` with the answers
+4. Creates initial task list in `colog/tasks.md` (only if it doesn't exist)
 5. Optionally seeds the log from existing project data
 6. Sets up scheduled tasks (morning briefing + heartbeat) if the platform supports it
 
-## For Existing Projects
+## Re-running Setup on Existing Projects
 
-If the project already has history, offer to import:
+If `colog/project.md` already exists, this is a *reconfigure*, not a fresh setup:
 
-- **Git log**: Run `git log --oneline --since="3 months ago"` and summarize key changes as [change] entries
-- **README/docs**: Extract project description, tech stack, and goals from existing files
-- **Package files**: Read `package.json`, `Cargo.toml`, `pyproject.toml`, etc. for technologies
-- **Open issues**: If GitHub issues exist, import open ones as [task] entries
+1. **Read the existing project.md first** — show the current configuration to the user
+2. **Ask what they want to change** — don't ask all questions from scratch. Show current values and let the user update only specific sections.
+3. **Merge, don't overwrite** — update only the sections the user wants to change. Keep everything else as-is.
+4. **Skip task creation** — `colog/tasks.md` already has user content, never overwrite it.
+5. **Skip log seeding** — log already has entries, don't re-import.
 
-Ask the user: "This repo has existing history. Want me to seed the log from git history and project files?"
+Example flow for reconfigure:
+```
+Current project configuration:
+  Name: My Project
+  Description: A web app for X
+  Team: @SG (CTO), @AL (Dev), @MK (Design)
+  Technologies: Python, FastAPI, React
+  Communication: Slack
+  Git: enabled
+  Schedule: morning 08:00, heartbeat every 30 min
 
-## Steps
+What would you like to change? (or "all" to reconfigure everything)
+```
+
+## Steps (Fresh Setup)
 
 1. Greet the user and explain what this command does
 2. Ask questions one at a time:
@@ -36,11 +50,22 @@ Ask the user: "This repo has existing history. Want me to seed the log from git 
 4. If git enabled and existing repo: offer to import history
 5. Write `colog/project.md`
 6. Write `colog/me.md` with the current user's info
-7. Write initial `colog/tasks.md` with setup tasks
+7. Write initial `colog/tasks.md` with setup tasks (only if it doesn't exist)
 8. If importing: write initial entries to `colog/log.md`
 9. Log the setup itself as a [milestone] entry
 10. **Set up scheduled tasks** (see section below)
 11. If git enabled: commit with `org: colog setup complete`
+
+## For New Projects With Existing History
+
+If the project already has git history, offer to import:
+
+- **Git log**: Run `git log --oneline --since="3 months ago"` and summarize key changes as [change] entries
+- **README/docs**: Extract project description, tech stack, and goals from existing files
+- **Package files**: Read `package.json`, `Cargo.toml`, `pyproject.toml`, etc. for technologies
+- **Open issues**: If GitHub issues exist, import open ones as [task] entries
+
+Ask the user: "This repo has existing history. Want me to seed the log from git history and project files?"
 
 ## User Identity (me.md)
 

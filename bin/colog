@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-VERSION="0.7.1"
+VERSION="0.7.2"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 TEMPLATES_DIR="$ROOT_DIR/templates"
@@ -261,24 +261,85 @@ cmd_setup() {
     exit 1
   fi
 
-  log "Project Setup Wizard"
-  log "(Tip: For a richer experience, use /colog:setup in your AI agent)"
-  echo ""
+  source "$LIB_DIR/generate.sh"
 
-  read -rp "Project name: " project_name
+  local config=".colog/config.yaml"
+  local is_reconfigure=false
+
+  # Read existing values as defaults
+  local existing_name=$(yaml_val "$config" "name")
+  local existing_desc=$(yaml_val "$config" "description")
+  local existing_lang=$(yaml_val "$config" "language")
+  local existing_tech=$(yaml_val "$config" "technologies")
+  local existing_comm=$(yaml_val "$config" "communication")
+  local existing_git=$(yaml_top_val "$config" "git_enabled")
+
+  if [[ -n "$existing_name" ]]; then
+    is_reconfigure=true
+    log "Project Reconfiguration"
+    log "(Tip: Press Enter to keep current values)"
+    echo ""
+    info "Current configuration:"
+    info "  Name: ${existing_name}"
+    info "  Description: ${existing_desc}"
+    info "  Language: ${existing_lang:-en}"
+    info "  Technologies: ${existing_tech}"
+    info "  Communication: ${existing_comm}"
+    info "  Git: ${existing_git:-yes}"
+    echo ""
+  else
+    log "Project Setup Wizard"
+    log "(Tip: For a richer experience, use /colog:setup in your AI agent)"
+    echo ""
+  fi
+
+  read -rp "Project name [${existing_name:-}]: " project_name
+  project_name="${project_name:-$existing_name}"
   [[ -z "$project_name" ]] && { error "Project name required."; exit 1; }
 
-  read -rp "Short description (1 line): " project_desc
+  read -rp "Short description [${existing_desc:-}]: " project_desc
+  project_desc="${project_desc:-$existing_desc}"
 
-  read -rp "Primary language [en]: " project_lang
-  project_lang="${project_lang:-en}"
+  read -rp "Primary language [${existing_lang:-en}]: " project_lang
+  project_lang="${project_lang:-${existing_lang:-en}}"
 
   echo ""
-  info "Team Members (press Enter when done)"
+  if [[ "$is_reconfigure" == true ]]; then
+    info "Team Members (current team shown below, press Enter to keep, or add new members)"
+    # Show existing team
+    local existing_team
+    existing_team=$(get_team "$config")
+    if [[ -n "$existing_team" ]]; then
+      while IFS='|' read -r tname tshort trole; do
+        [[ -z "$tname" ]] && continue
+        tname=$(echo "$tname" | xargs)
+        tshort=$(echo "$tshort" | xargs)
+        trole=$(echo "$trole" | xargs)
+        info "  • ${tname} (${tshort}) — ${trole}"
+      done <<< "$existing_team"
+    fi
+    echo ""
+    read -rp "Keep current team? [yes] (no = re-enter): " keep_team
+  fi
+
   local -a team_names=()
   local -a team_shorts=()
   local -a team_roles=()
-  local i=1
+
+  if [[ "$is_reconfigure" == true && "${keep_team:-yes}" != "no" ]]; then
+    # Preserve existing team
+    while IFS='|' read -r tname tshort trole; do
+      [[ -z "$tname" ]] && continue
+      team_names+=("$(echo "$tname" | xargs)")
+      team_shorts+=("$(echo "$tshort" | xargs)")
+      team_roles+=("$(echo "$trole" | xargs)")
+    done <<< "$(get_team "$config")"
+    info "Add more members (press Enter when done):"
+  else
+    info "Team Members (press Enter when done)"
+  fi
+
+  local i=$(( ${#team_names[@]} + 1 ))
   while true; do
     read -rp "  Member $i name (or Enter to finish): " name
     [[ -z "$name" ]] && break
@@ -290,36 +351,45 @@ cmd_setup() {
     ((i++))
   done
 
-  read -rp "Key technologies (comma-separated): " tech_stack
-  read -rp "Communication platform (e.g., Slack, WhatsApp, Teams): " comm_platform
+  read -rp "Key technologies [${existing_tech:-}]: " tech_stack
+  tech_stack="${tech_stack:-$existing_tech}"
+
+  read -rp "Communication platform [${existing_comm:-}]: " comm_platform
+  comm_platform="${comm_platform:-$existing_comm}"
 
   echo ""
-  info "Your Identity (for colog/me.md — local, gitignored)"
-  read -rp "  Your first name: " me_first
-  read -rp "  Your last name: " me_last
-  read -rp "  Your email: " me_email
-  read -rp "  Your shortcut (e.g., @SG): " me_shortcut
+  # Only ask for me.md if it doesn't exist yet
+  local me_first="" me_last="" me_email="" me_shortcut=""
+  if [[ ! -f "colog/me.md" ]]; then
+    info "Your Identity (for colog/me.md — local, gitignored)"
+    read -rp "  Your first name: " me_first
+    read -rp "  Your last name: " me_last
+    read -rp "  Your email: " me_email
+    read -rp "  Your shortcut (e.g., @SG): " me_shortcut
+    echo ""
+  else
+    info "colog/me.md exists, keeping current identity."
+    echo ""
+  fi
 
-  echo ""
-  local git_enabled="yes"
+  local git_enabled="${existing_git:-yes}"
   if ! git rev-parse --is-inside-work-tree &>/dev/null; then
     info "No git repository detected."
-    read -rp "Use git for version control? [no]: " git_answer
-    git_enabled="${git_answer:-no}"
+    read -rp "Use git for version control? [${existing_git:-no}]: " git_answer
+    git_enabled="${git_answer:-${existing_git:-no}}"
   else
-    read -rp "Use git for version control? [yes]: " git_answer
-    git_enabled="${git_answer:-yes}"
+    read -rp "Use git for version control? [${existing_git:-yes}]: " git_answer
+    git_enabled="${git_answer:-${existing_git:-yes}}"
   fi
 
   echo ""
   log "Generating project configuration..."
 
-  local agent=$(grep '^agent:' ".colog/config.yaml" 2>/dev/null | head -1 | awk '{print $2}' | tr -d '"' || echo 'claude')
-  local commands_dir=$(grep '^commands_dir:' ".colog/config.yaml" 2>/dev/null | head -1 | sed 's/^commands_dir: "//' | tr -d '"' || get_commands_dir "$agent")
-  local initialized=$(grep '^initialized:' ".colog/config.yaml" 2>/dev/null | head -1 | sed 's/^initialized: "//' | tr -d '"' || date -Iseconds)
-  local template_source=$(grep '^template_source:' ".colog/config.yaml" 2>/dev/null | head -1 | sed 's/^template_source: "//' | tr -d '"' || echo '')
+  local agent=$(grep '^agent:' "$config" 2>/dev/null | head -1 | awk '{print $2}' | tr -d '"' || echo 'claude')
+  local commands_dir=$(grep '^commands_dir:' "$config" 2>/dev/null | head -1 | sed 's/^commands_dir: "//' | tr -d '"' || get_commands_dir "$agent")
+  local initialized=$(grep '^initialized:' "$config" 2>/dev/null | head -1 | sed 's/^initialized: "//' | tr -d '"' || date -Iseconds)
+  local template_source=$(grep '^template_source:' "$config" 2>/dev/null | head -1 | sed 's/^template_source: "//' | tr -d '"' || echo '')
 
-  local config=".colog/config.yaml"
   cat > "$config" <<YAML
 # colog configuration
 version: "${VERSION}"
@@ -349,7 +419,6 @@ YAML
   done
 
   log "Generating files..."
-  source "$LIB_DIR/generate.sh"
   generate_claude_md "$config" "CLAUDE.md"
   generate_project_md "$config" "colog/project.md"
   generate_tasks "$config" "colog/tasks.md"
