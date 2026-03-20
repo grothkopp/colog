@@ -17,36 +17,15 @@ get_team() {
     sed 's/.*name: "//;s/".*shortcut: "/ | /;s/".*role: "/ | /;s/".*//' || true
 }
 
-generate_claude_md() {
-  local config="$1" output="$2"
+generate_colog_section() {
+  local config="$1" section_file="$2"
 
-  local name=$(yaml_val "$config" "name")
-  local desc=$(yaml_val "$config" "description")
   local lang=$(yaml_val "$config" "language")
-  local tech=$(yaml_val "$config" "technologies")
   local comm=$(yaml_val "$config" "communication")
   local commands_dir=$(yaml_top_val "$config" "commands_dir")
 
-  cat > "$output" << CLAUDE_INNER
-# ${name}
-
-${desc}
-
-## Team
-
-| Name | Shortcut | Role |
-|------|----------|------|
-CLAUDE_INNER
-
-  while IFS='|' read -r tname tshort trole; do
-    [[ -z "$tname" ]] && continue
-    tname=$(echo "$tname" | xargs)
-    tshort=$(echo "$tshort" | xargs)
-    trole=$(echo "$trole" | xargs)
-    echo "| ${tname} | ${tshort} | ${trole} |" >> "$output"
-  done < <(get_team "$config")
-
-  cat >> "$output" << CLAUDE_INNER
+  cat > "$section_file" << COLOG_INNER
+<!-- colog:start -->
 
 ## Current User
 
@@ -116,15 +95,15 @@ ${commands_dir:-".claude/commands"}/
   config.yaml          Configuration
 CLAUDE.md              This file
 \`\`\`
-CLAUDE_INNER
 
-  echo "" >> "$output"
-  echo "## Communication" >> "$output"
+## Communication
+COLOG_INNER
+
   if [[ -n "$comm" ]]; then
-    echo "" >> "$output"
-    echo "Primary channel: ${comm}" >> "$output"
+    echo "" >> "$section_file"
+    echo "Primary channel: ${comm}" >> "$section_file"
   fi
-  cat >> "$output" << 'CLAUDE_INNER'
+  cat >> "$section_file" << 'COLOG_INNER'
 
 All significant interactions should be logged in colog/log.md.
 
@@ -132,18 +111,101 @@ All significant interactions should be logged in colog/log.md.
 
 - No emojis
 - Keep messages concise and actionable
-CLAUDE_INNER
+COLOG_INNER
 
   if [[ "$lang" == "de" ]]; then
-    echo "- Use proper German Umlauts: ÄÖÜäöüß" >> "$output"
+    echo "- Use proper German Umlauts: ÄÖÜäöüß" >> "$section_file"
   fi
 
-  if [[ -n "$tech" ]]; then
+  echo "" >> "$section_file"
+  echo "<!-- colog:end -->" >> "$section_file"
+}
+
+upsert_colog_section() {
+  local output="$1" section_file="$2"
+
+  if [[ ! -f "$output" ]]; then
+    # No CLAUDE.md exists — use section as is
+    cp "$section_file" "$output"
+  elif grep -q "<!-- colog:start -->" "$output"; then
+    # Replace existing colog section between markers
+    local tmp="${output}.tmp"
+    awk '
+      /^<!-- colog:start -->/ { skip=1; next }
+      /^<!-- colog:end -->/ { skip=0; next }
+      !skip { print }
+    ' "$output" > "$tmp"
+    # Find where the section was (append at end if empty file remains)
+    # Insert colog section at the position where old content was removed
+    # Simple approach: content before markers is preserved above, append section + remaining
+    local before="${output}.before"
+    local after="${output}.after"
+    sed -n '1,/<!-- colog:start -->/p' "$output" | head -n -1 > "$before"
+    sed -n '/<!-- colog:end -->/,$p' "$output" | tail -n +2 > "$after"
+    cat "$before" "$section_file" "$after" > "$output"
+    rm -f "$before" "$after" "$tmp"
+  else
+    # CLAUDE.md exists but has no colog markers — append
     echo "" >> "$output"
-    echo "## Technologies" >> "$output"
-    echo "" >> "$output"
-    echo "${tech}" >> "$output"
+    cat "$section_file" >> "$output"
   fi
+}
+
+generate_claude_md() {
+  local config="$1" output="$2"
+
+  local name=$(yaml_val "$config" "name")
+  local desc=$(yaml_val "$config" "description")
+  local tech=$(yaml_val "$config" "technologies")
+
+  # Generate the colog section to a temp file
+  local section_file
+  section_file=$(mktemp)
+  generate_colog_section "$config" "$section_file"
+
+  if [[ ! -f "$output" ]] || ! grep -q "<!-- colog:start -->" "$output"; then
+    # No existing CLAUDE.md or no markers — check if it's a colog-created file
+    if [[ ! -f "$output" ]]; then
+      # Create fresh: project header + colog section
+      cat > "$output" << CLAUDE_INNER
+# ${name}
+
+${desc}
+
+## Team
+
+| Name | Shortcut | Role |
+|------|----------|------|
+CLAUDE_INNER
+
+      while IFS='|' read -r tname tshort trole; do
+        [[ -z "$tname" ]] && continue
+        tname=$(echo "$tname" | xargs)
+        tshort=$(echo "$tshort" | xargs)
+        trole=$(echo "$trole" | xargs)
+        echo "| ${tname} | ${tshort} | ${trole} |" >> "$output"
+      done < <(get_team "$config")
+
+      if [[ -n "$tech" ]]; then
+        echo "" >> "$output"
+        echo "## Technologies" >> "$output"
+        echo "" >> "$output"
+        echo "${tech}" >> "$output"
+      fi
+
+      echo "" >> "$output"
+      cat "$section_file" >> "$output"
+    else
+      # Existing CLAUDE.md without markers — append colog section
+      echo "" >> "$output"
+      cat "$section_file" >> "$output"
+    fi
+  else
+    # Has markers — replace colog section, preserve everything else
+    upsert_colog_section "$output" "$section_file"
+  fi
+
+  rm -f "$section_file"
 }
 
 generate_project_md() {
@@ -198,6 +260,11 @@ PROJECT_INNER
 generate_tasks() {
   local config="$1" output="$2"
   local name=$(yaml_val "$config" "name")
+
+  # Never overwrite existing tasks — users add their own
+  if [[ -f "$output" ]]; then
+    return 0
+  fi
 
   cat > "$output" << TASKS_INNER
 # Tasks — ${name}

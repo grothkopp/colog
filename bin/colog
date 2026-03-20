@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-VERSION="0.7.0"
+VERSION="0.7.1"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 TEMPLATES_DIR="$ROOT_DIR/templates"
@@ -206,12 +206,17 @@ GITIGNORE
     info "  ~ .gitignore (added colog/me.md)"
   fi
 
-  # Copy CLAUDE.md template
+  # CLAUDE.md handling — extend existing, never overwrite
   if [[ ! -f "$target/CLAUDE.md" ]]; then
     cp "$TEMPLATES_DIR/CLAUDE.md.template" "$target/CLAUDE.md"
     info "  + CLAUDE.md (template — run '/colog:setup' to configure)"
+  elif grep -q "<!-- colog:start -->" "$target/CLAUDE.md"; then
+    warn "  ~ CLAUDE.md (colog section exists, skipped)"
   else
-    warn "  ~ CLAUDE.md (exists, skipped)"
+    # Append colog section from template to existing CLAUDE.md
+    echo "" >> "$target/CLAUDE.md"
+    sed -n '/<!-- colog:start -->/,/<!-- colog:end -->/p' "$TEMPLATES_DIR/CLAUDE.md.template" >> "$target/CLAUDE.md"
+    info "  ~ CLAUDE.md (appended colog section to existing file)"
   fi
 
   # Write config

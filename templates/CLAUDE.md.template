@@ -10,6 +10,8 @@ _Short project description_
 
 > Run `/colog:setup` to configure this file.
 
+<!-- colog:start -->
+
 ## Git
 
 Check `colog/project.md` → `## Git` → `Enabled:` before running any git command.
@@ -90,3 +92,5 @@ All significant interactions should be logged in colog/log.md.
 
 - No emojis
 - Keep messages concise and actionable
+
+<!-- colog:end -->
