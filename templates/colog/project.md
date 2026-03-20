@@ -1,6 +1,6 @@
 # Project
 
-> Run `/collalog:setup` to populate this file.
+> Run `/colog:setup` to populate this file.
 
 ## Description
 
@@ -12,7 +12,7 @@ _What is this project about?_
 |------|----------|------|
 | | | |
 
-> Each team member's local identity is in `collalog/me.md` (gitignored).
+> Each team member's local identity is in `colog/me.md` (gitignored).
 
 ## Technologies
 

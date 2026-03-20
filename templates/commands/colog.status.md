@@ -1,18 +1,18 @@
-# /collalog:status — Project Overview
+# /colog:status — Project Overview
 
 Show a quick overview of the current project state.
 
 ## Usage
 
 ```
-/collalog:status
+/colog:status
 ```
 
 ## Steps
 
-1. **Read project info**: `collalog/project.md` for team and description
-2. **Open tasks**: `collalog/tasks.md` — list open tasks grouped by owner
-3. **Recent activity**: Last 5-10 entries from `collalog/log.md` — use `awk '/^---$/{c++} c>=10{exit} {print}' collalog/log.md` (NEVER read the whole file)
+1. **Read project info**: `colog/project.md` for team and description
+2. **Open tasks**: `colog/tasks.md` — list open tasks grouped by owner
+3. **Recent activity**: Last 5-10 entries from `colog/log.md` — use `awk '/^---$/{c++} c>=10{exit} {print}' colog/log.md` (NEVER read the whole file)
 4. **Git status** (only if git enabled in project.md → `## Git`): uncommitted changes, unpushed commits
 5. **Format as a concise summary**
 

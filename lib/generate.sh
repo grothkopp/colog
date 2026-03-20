@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# generate.sh — Template generation functions for collalog
+# generate.sh — Template generation functions for colog
 
 yaml_val() {
   local file="$1" key="$2"
@@ -50,18 +50,18 @@ CLAUDE_INNER
 
 ## Current User
 
-Read \`collalog/me.md\` for the current user's identity (name, shortcut, email).
+Read \`colog/me.md\` for the current user's identity (name, shortcut, email).
 Use the shortcut for log entries and task ownership. This file is local and gitignored.
-If it doesn't exist, ask the user to run \`/collalog:setup\` or use \`@Agent\`.
+If it doesn't exist, ask the user to run \`/colog:setup\` or use \`@Agent\`.
 
 ## Git
 
-Check \`collalog/project.md\` → \`## Git\` → \`Enabled:\` before running any git command.
+Check \`colog/project.md\` → \`## Git\` → \`Enabled:\` before running any git command.
 If \`Enabled: no\`, skip ALL git operations (commits, status, log, push) silently.
 
 ## Unified Log
 
-The central project log lives at \`collalog/log.md\`. Every meaningful event
+The central project log lives at \`colog/log.md\`. Every meaningful event
 gets a log entry here. Newest entries first.
 
 **Important:** NEVER read the entire log file or rewrite it to add entries.
@@ -72,14 +72,14 @@ prepend via temp file + cat, read recent entries via awk/grep.
 
 | Command | Description |
 |---------|-------------|
-| /collalog:setup | One-time project setup wizard |
-| /collalog:log | Manually add a log entry |
-| /collalog:save | Save current work (log changes + commit) |
-| /collalog:status | Quick project overview |
+| /colog:setup | One-time project setup wizard |
+| /colog:log | Manually add a log entry |
+| /colog:save | Save current work (log changes + commit) |
+| /colog:status | Quick project overview |
 
 ## Skills
 
-Agent rules in \`.collalog/skills/\` (always active):
+Agent rules in \`.colog/skills/\` (always active):
 
 | Skill | Description |
 |-------|-------------|
@@ -87,11 +87,11 @@ Agent rules in \`.collalog/skills/\` (always active):
 | git | Commit conventions |
 | task-management | Task list as snapshot of the log |
 | memory | Optional project memory snapshot |
-| collalog-sync | Sync with collalog template repo |
+| colog-sync | Sync with colog template repo |
 
 ## Prompts
 
-Scheduled behaviors in \`.collalog/prompts/\`:
+Scheduled behaviors in \`.colog/prompts/\`:
 
 | Prompt | Schedule | Description |
 |--------|----------|-------------|
@@ -101,15 +101,15 @@ Scheduled behaviors in \`.collalog/prompts/\`:
 ## Workspace Structure
 
 \`\`\`
-collalog/
+colog/
   log.md               Unified project log (source of truth)
   tasks.md             Task snapshot
   project.md           Project description, team
   me.md                Current user identity (local, gitignored)
   memory.md            Optional memory snapshot
 ${commands_dir:-".claude/commands"}/
-  collalog.*.md        Commands (user invokes these)
-.collalog/
+  colog.*.md        Commands (user invokes these)
+.colog/
   skills/              Agent rules (always active)
   prompts/             Scheduled behaviors
   templates/           Original templates (for sync)
@@ -126,7 +126,7 @@ CLAUDE_INNER
   fi
   cat >> "$output" << 'CLAUDE_INNER'
 
-All significant interactions should be logged in collalog/log.md.
+All significant interactions should be logged in colog/log.md.
 
 ## Formatting
 

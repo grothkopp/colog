@@ -1,6 +1,6 @@
 # Skill: Task Management
 
-Rules for maintaining the task snapshot at `collalog/tasks.md`.
+Rules for maintaining the task snapshot at `colog/tasks.md`.
 
 The task list is a live snapshot derived from log entries of type [task].
 It shows what's open, who owns it, and what's blocked.
@@ -25,7 +25,7 @@ Minimal format (created is always required):
 
 ## Current User
 
-Read `collalog/me.md` for the current user's shortcut. When the user creates
+Read `colog/me.md` for the current user's shortcut. When the user creates
 a task without specifying an owner, default to the shortcut from me.md.
 If me.md doesn't exist, ask explicitly or leave unassigned.
 

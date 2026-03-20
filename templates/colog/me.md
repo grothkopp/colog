@@ -1,7 +1,7 @@
 # Me
 
 > This file identifies the current user. It is local and gitignored.
-> Created by `/collalog:setup`. Must match a team member in `project.md`.
+> Created by `/colog:setup`. Must match a team member in `project.md`.
 
 | Field | Value |
 |-------|-------|

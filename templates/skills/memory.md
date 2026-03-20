@@ -1,13 +1,13 @@
 # Skill: Memory
 
-Rules for the optional memory snapshot at `collalog/memory.md`.
+Rules for the optional memory snapshot at `colog/memory.md`.
 
 Memory is a condensed current-state view of the project — a cheat sheet
 derived from the log but organized for quick reference.
 
 ## When to Create
 
-Create `collalog/memory.md` when:
+Create `colog/memory.md` when:
 - The log grows long and context gets hard to find
 - The project has patterns worth documenting
 - New team members need a quick onboarding reference

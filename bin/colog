@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# collalog — Collaborative logging for AI-assisted teams
+# colog — Collaborative logging for AI-assisted teams
 # Central unified log + commands/skills/prompts for multi-person + agent collaboration
 
 set -euo pipefail
 
-VERSION="0.6.1"
+VERSION="0.7.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 TEMPLATES_DIR="$ROOT_DIR/templates"
@@ -17,10 +17,10 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-log()   { echo -e "${GREEN}[collalog]${NC} $1"; }
-warn()  { echo -e "${YELLOW}[collalog]${NC} $1"; }
-error() { echo -e "${RED}[collalog]${NC} $1" >&2; }
-info()  { echo -e "${BLUE}[collalog]${NC} $1"; }
+log()   { echo -e "${GREEN}[colog]${NC} $1"; }
+warn()  { echo -e "${YELLOW}[colog]${NC} $1"; }
+error() { echo -e "${RED}[colog]${NC} $1" >&2; }
+info()  { echo -e "${BLUE}[colog]${NC} $1"; }
 
 # ─── AGENT CONFIGURATIONS ─────────────────────────────────────────────────
 
@@ -36,7 +36,7 @@ declare -A AGENT_COMMANDS_DIR=(
   [opencode]=".opencode/command"
   [kiro]=".kiro/prompts"
   [amp]=".agents/commands"
-  [openclaw]=".collalog/commands"
+  [openclaw]=".colog/commands"
 )
 
 agent_command_filename() {
@@ -50,21 +50,21 @@ agent_command_filename() {
 
 get_commands_dir() {
   local agent="$1"
-  echo "${AGENT_COMMANDS_DIR[$agent]:-".collalog/commands"}"
+  echo "${AGENT_COMMANDS_DIR[$agent]:-".colog/commands"}"
 }
 
 # ─── USAGE ─────────────────────────────────────────────────────────────────
 
 usage() {
   cat <<EOF
-collalog v${VERSION} — Collaborative logging for AI-assisted teams
+colog v${VERSION} — Collaborative logging for AI-assisted teams
 
 Usage:
-  collalog init [path]          Initialize a new project
-  collalog setup                Interactive project configuration
-  collalog update               Update commands/skills/prompts from templates
-  collalog sync                 Show diff between project and templates
-  collalog version              Show version
+  colog init [path]          Initialize a new project
+  colog setup                Interactive project configuration
+  colog update               Update commands/skills/prompts from templates
+  colog sync                 Show diff between project and templates
+  colog version              Show version
 
 Options:
   --agent <type>    AI tool: claude (default), codex, cursor, gemini,
@@ -73,15 +73,15 @@ Options:
   --help            Show this help
 
 After init, use these agent commands:
-  /collalog:setup               Project setup wizard (one-time)
-  /collalog:log <description>   Add a log entry manually
-  /collalog:save [description]  Save current work (log + commit)
-  /collalog:status              Project overview
+  /colog:setup               Project setup wizard (one-time)
+  /colog:log <description>   Add a log entry manually
+  /colog:save [description]  Save current work (log + commit)
+  /colog:status              Project overview
 
 Examples:
-  collalog init .
-  collalog --agent codex init ./project
-  collalog setup
+  colog init .
+  colog --agent codex init ./project
+  colog setup
 EOF
 }
 
@@ -120,17 +120,17 @@ cmd_init() {
 
   local commands_dir=$(get_commands_dir "$agent")
 
-  log "Initializing collalog in: $target"
+  log "Initializing colog in: $target"
   log "Agent: $agent | Commands: $commands_dir | Language: $lang"
   echo ""
 
-  # Create collalog/ — the single user-facing directory
-  mkdir -p "$target/collalog"
-  info "  + collalog/"
+  # Create colog/ — the single user-facing directory
+  mkdir -p "$target/colog"
+  info "  + colog/"
 
-  # Create .collalog/ — fixed elements (skills, prompts, templates, config)
-  mkdir -p "$target/.collalog"/{skills,prompts,templates/commands,templates/skills,templates/prompts}
-  info "  + .collalog/"
+  # Create .colog/ — fixed elements (skills, prompts, templates, config)
+  mkdir -p "$target/.colog"/{skills,prompts,templates/commands,templates/skills,templates/prompts}
+  info "  + .colog/"
 
   # Create agent-specific commands directory
   mkdir -p "$target/$commands_dir"
@@ -143,80 +143,80 @@ cmd_init() {
     install_file "$cmd" "$target/$commands_dir" "$agent"
   done
 
-  # Install SKILLS → .collalog/skills/ (agent rules, always active)
-  log "Installing skills to .collalog/skills..."
+  # Install SKILLS → .colog/skills/ (agent rules, always active)
+  log "Installing skills to .colog/skills..."
   for skill in "$TEMPLATES_DIR/skills"/*.md; do
     [[ -f "$skill" ]] || continue
     local name=$(basename "$skill")
-    if [[ ! -f "$target/.collalog/skills/$name" ]]; then
-      cp "$skill" "$target/.collalog/skills/$name"
-      info "  + .collalog/skills/$name"
+    if [[ ! -f "$target/.colog/skills/$name" ]]; then
+      cp "$skill" "$target/.colog/skills/$name"
+      info "  + .colog/skills/$name"
     else
-      warn "  ~ .collalog/skills/$name (exists, skipped)"
+      warn "  ~ .colog/skills/$name (exists, skipped)"
     fi
   done
 
-  # Install PROMPTS → .collalog/prompts/ (scheduled behaviors)
-  log "Installing prompts to .collalog/prompts..."
+  # Install PROMPTS → .colog/prompts/ (scheduled behaviors)
+  log "Installing prompts to .colog/prompts..."
   for prompt in "$TEMPLATES_DIR/prompts"/*.md; do
     [[ -f "$prompt" ]] || continue
     local name=$(basename "$prompt")
-    if [[ ! -f "$target/.collalog/prompts/$name" ]]; then
-      cp "$prompt" "$target/.collalog/prompts/$name"
-      info "  + .collalog/prompts/$name"
+    if [[ ! -f "$target/.colog/prompts/$name" ]]; then
+      cp "$prompt" "$target/.colog/prompts/$name"
+      info "  + .colog/prompts/$name"
     else
-      warn "  ~ .collalog/prompts/$name (exists, skipped)"
+      warn "  ~ .colog/prompts/$name (exists, skipped)"
     fi
   done
 
   # Store original templates for update/sync
   log "Storing templates..."
-  cp "$TEMPLATES_DIR/commands"/*.md "$target/.collalog/templates/commands/" 2>/dev/null || true
-  cp "$TEMPLATES_DIR/skills"/*.md "$target/.collalog/templates/skills/" 2>/dev/null || true
-  cp "$TEMPLATES_DIR/prompts"/*.md "$target/.collalog/templates/prompts/" 2>/dev/null || true
-  info "  + .collalog/templates/ (originals for sync)"
+  cp "$TEMPLATES_DIR/commands"/*.md "$target/.colog/templates/commands/" 2>/dev/null || true
+  cp "$TEMPLATES_DIR/skills"/*.md "$target/.colog/templates/skills/" 2>/dev/null || true
+  cp "$TEMPLATES_DIR/prompts"/*.md "$target/.colog/templates/prompts/" 2>/dev/null || true
+  info "  + .colog/templates/ (originals for sync)"
 
-  # Create collalog data files from templates (skip me.md — it's local-only, created during setup)
-  log "Creating collalog files..."
-  for tmpl in "$TEMPLATES_DIR/collalog"/*.md; do
+  # Create colog data files from templates (skip me.md — it's local-only, created during setup)
+  log "Creating colog files..."
+  for tmpl in "$TEMPLATES_DIR/colog"/*.md; do
     [[ -f "$tmpl" ]] || continue
     local name=$(basename "$tmpl")
     [[ "$name" == "me.md" ]] && continue
-    if [[ ! -f "$target/collalog/$name" ]]; then
-      cp "$tmpl" "$target/collalog/$name"
-      info "  + collalog/$name"
+    if [[ ! -f "$target/colog/$name" ]]; then
+      cp "$tmpl" "$target/colog/$name"
+      info "  + colog/$name"
     else
-      warn "  ~ collalog/$name (exists, skipped)"
+      warn "  ~ colog/$name (exists, skipped)"
     fi
   done
 
   # Create .gitignore with local-only files
   local gitignore="$target/.gitignore"
-  local me_entry="collalog/me.md"
+  local me_entry="colog/me.md"
   if [[ ! -f "$gitignore" ]]; then
     cat > "$gitignore" <<GITIGNORE
-# collalog — local-only files (not shared via git)
-collalog/me.md
+# colog — local-only files (not shared via git)
+colog/me.md
 GITIGNORE
-    info "  + .gitignore (with collalog/me.md)"
+    info "  + .gitignore (with colog/me.md)"
   elif ! grep -qF "$me_entry" "$gitignore"; then
     echo "" >> "$gitignore"
-    echo "# collalog — local-only files" >> "$gitignore"
-    echo "collalog/me.md" >> "$gitignore"
-    info "  ~ .gitignore (added collalog/me.md)"
+    echo "# colog — local-only files" >> "$gitignore"
+    echo "colog/me.md" >> "$gitignore"
+    info "  ~ .gitignore (added colog/me.md)"
   fi
 
   # Copy CLAUDE.md template
   if [[ ! -f "$target/CLAUDE.md" ]]; then
     cp "$TEMPLATES_DIR/CLAUDE.md.template" "$target/CLAUDE.md"
-    info "  + CLAUDE.md (template — run '/collalog:setup' to configure)"
+    info "  + CLAUDE.md (template — run '/colog:setup' to configure)"
   else
     warn "  ~ CLAUDE.md (exists, skipped)"
   fi
 
   # Write config
-  cat > "$target/.collalog/config.yaml" <<YAML
-# collalog configuration
+  cat > "$target/.colog/config.yaml" <<YAML
+# colog configuration
 version: "${VERSION}"
 agent: "${agent}"
 commands_dir: "${commands_dir}"
@@ -224,7 +224,7 @@ language: "${lang}"
 initialized: "$(date -Iseconds)"
 template_source: "${ROOT_DIR}"
 
-# Project settings (populated by /collalog:setup)
+# Project settings (populated by /colog:setup)
 project:
   name: ""
   description: ""
@@ -235,29 +235,29 @@ YAML
   log "Done! Project initialized."
   echo ""
   log "What was installed:"
-  info "  collalog/               Log, tasks, project (user-facing data)"
+  info "  colog/               Log, tasks, project (user-facing data)"
   info "  $commands_dir/     Commands (user invokes these)"
-  info "  .collalog/skills/       Skills (agent rules, always active)"
-  info "  .collalog/prompts/      Prompts (scheduled behaviors)"
+  info "  .colog/skills/       Skills (agent rules, always active)"
+  info "  .colog/prompts/      Prompts (scheduled behaviors)"
   info "  CLAUDE.md               Main agent prompt"
   echo ""
   log "Next steps:"
-  log "  1. Run /collalog:setup in your agent to configure the project"
+  log "  1. Run /colog:setup in your agent to configure the project"
   log "  2. Set up scheduled tasks (heartbeat + morning briefing)"
-  log "  3. Start working — use /collalog:log and /collalog:save"
+  log "  3. Start working — use /colog:log and /colog:save"
   echo ""
 }
 
-# ─── SETUP (CLI fallback — prefer /collalog:setup command) ─────────────────
+# ─── SETUP (CLI fallback — prefer /colog:setup command) ─────────────────
 
 cmd_setup() {
-  if [[ ! -d ".collalog" ]]; then
-    error "Not a collalog project. Run 'collalog init' first."
+  if [[ ! -d ".colog" ]]; then
+    error "Not a colog project. Run 'colog init' first."
     exit 1
   fi
 
   log "Project Setup Wizard"
-  log "(Tip: For a richer experience, use /collalog:setup in your AI agent)"
+  log "(Tip: For a richer experience, use /colog:setup in your AI agent)"
   echo ""
 
   read -rp "Project name: " project_name
@@ -289,7 +289,7 @@ cmd_setup() {
   read -rp "Communication platform (e.g., Slack, WhatsApp, Teams): " comm_platform
 
   echo ""
-  info "Your Identity (for collalog/me.md — local, gitignored)"
+  info "Your Identity (for colog/me.md — local, gitignored)"
   read -rp "  Your first name: " me_first
   read -rp "  Your last name: " me_last
   read -rp "  Your email: " me_email
@@ -309,14 +309,14 @@ cmd_setup() {
   echo ""
   log "Generating project configuration..."
 
-  local agent=$(grep '^agent:' ".collalog/config.yaml" 2>/dev/null | head -1 | awk '{print $2}' | tr -d '"' || echo 'claude')
-  local commands_dir=$(grep '^commands_dir:' ".collalog/config.yaml" 2>/dev/null | head -1 | sed 's/^commands_dir: "//' | tr -d '"' || get_commands_dir "$agent")
-  local initialized=$(grep '^initialized:' ".collalog/config.yaml" 2>/dev/null | head -1 | sed 's/^initialized: "//' | tr -d '"' || date -Iseconds)
-  local template_source=$(grep '^template_source:' ".collalog/config.yaml" 2>/dev/null | head -1 | sed 's/^template_source: "//' | tr -d '"' || echo '')
+  local agent=$(grep '^agent:' ".colog/config.yaml" 2>/dev/null | head -1 | awk '{print $2}' | tr -d '"' || echo 'claude')
+  local commands_dir=$(grep '^commands_dir:' ".colog/config.yaml" 2>/dev/null | head -1 | sed 's/^commands_dir: "//' | tr -d '"' || get_commands_dir "$agent")
+  local initialized=$(grep '^initialized:' ".colog/config.yaml" 2>/dev/null | head -1 | sed 's/^initialized: "//' | tr -d '"' || date -Iseconds)
+  local template_source=$(grep '^template_source:' ".colog/config.yaml" 2>/dev/null | head -1 | sed 's/^template_source: "//' | tr -d '"' || echo '')
 
-  local config=".collalog/config.yaml"
+  local config=".colog/config.yaml"
   cat > "$config" <<YAML
-# collalog configuration
+# colog configuration
 version: "${VERSION}"
 agent: "${agent}"
 commands_dir: "${commands_dir}"
@@ -346,12 +346,12 @@ YAML
   log "Generating files..."
   source "$LIB_DIR/generate.sh"
   generate_claude_md "$config" "CLAUDE.md"
-  generate_project_md "$config" "collalog/project.md"
-  generate_tasks "$config" "collalog/tasks.md"
+  generate_project_md "$config" "colog/project.md"
+  generate_tasks "$config" "colog/tasks.md"
 
   # Generate me.md (local, gitignored)
   if [[ -n "$me_first" || -n "$me_shortcut" ]]; then
-    cat > "collalog/me.md" <<ME_INNER
+    cat > "colog/me.md" <<ME_INNER
 # Me
 
 > This file identifies the current user. It is local and gitignored.
@@ -364,34 +364,34 @@ YAML
 | Email | ${me_email} |
 | Shortcut | ${me_shortcut} |
 ME_INNER
-    info "  + collalog/me.md (local identity)"
+    info "  + colog/me.md (local identity)"
   fi
 
   echo ""
   log "Setup complete! Your project '${project_name}' is ready."
   echo ""
   log "Next steps:"
-  log "  1. Review CLAUDE.md and collalog/project.md"
+  log "  1. Review CLAUDE.md and colog/project.md"
   log "  2. Set up scheduled tasks (heartbeat + morning)"
   if [[ "$git_enabled" == "yes" ]]; then
-    log "  3. git add -A && git commit -m 'org: collalog setup complete'"
+    log "  3. git add -A && git commit -m 'org: colog setup complete'"
   fi
 }
 
 # ─── UPDATE ────────────────────────────────────────────────────────────────
 
 cmd_update() {
-  if [[ ! -d ".collalog" ]]; then
-    error "Not a collalog project. Run 'collalog init' first."
+  if [[ ! -d ".colog" ]]; then
+    error "Not a colog project. Run 'colog init' first."
     exit 1
   fi
 
-  local config=".collalog/config.yaml"
+  local config=".colog/config.yaml"
   local source
   source=$(grep 'template_source:' "$config" | sed 's/.*: "//' | tr -d '"')
 
   if [[ -z "$source" || ! -d "$source" ]]; then
-    error "Template source not found. Set template_source in .collalog/config.yaml"
+    error "Template source not found. Set template_source in .colog/config.yaml"
     exit 1
   fi
 
@@ -408,7 +408,7 @@ cmd_update() {
     local base_name=$(basename "$cmd" .md)
     local target_name=$(agent_command_filename "$agent" "$base_name")
     local target="$commands_dir/$target_name"
-    local stored=".collalog/templates/commands/$(basename "$cmd")"
+    local stored=".colog/templates/commands/$(basename "$cmd")"
 
     if [[ ! -f "$target" ]]; then
       cp "$cmd" "$target"
@@ -417,18 +417,18 @@ cmd_update() {
     elif [[ -f "$stored" ]] && diff -q "$cmd" "$stored" > /dev/null 2>&1; then
       info "  = $target_name (unchanged)"
     else
-      warn "  ~ $target_name (differs — use 'collalog sync' to review)"
+      warn "  ~ $target_name (differs — use 'colog sync' to review)"
     fi
   done
 
   # Update skills
   echo ""
-  log "Skills (.collalog/skills):"
+  log "Skills (.colog/skills):"
   for skill in "$source/templates/skills"/*.md; do
     [[ -f "$skill" ]] || continue
     local name=$(basename "$skill")
-    local target=".collalog/skills/$name"
-    local stored=".collalog/templates/skills/$name"
+    local target=".colog/skills/$name"
+    local stored=".colog/templates/skills/$name"
 
     if [[ ! -f "$target" ]]; then
       cp "$skill" "$target"
@@ -437,18 +437,18 @@ cmd_update() {
     elif [[ -f "$stored" ]] && diff -q "$skill" "$stored" > /dev/null 2>&1; then
       info "  = $name (unchanged)"
     else
-      warn "  ~ $name (differs — use 'collalog sync' to review)"
+      warn "  ~ $name (differs — use 'colog sync' to review)"
     fi
   done
 
   # Update prompts
   echo ""
-  log "Prompts (.collalog/prompts):"
+  log "Prompts (.colog/prompts):"
   for prompt in "$source/templates/prompts"/*.md; do
     [[ -f "$prompt" ]] || continue
     local name=$(basename "$prompt")
-    local target=".collalog/prompts/$name"
-    local stored=".collalog/templates/prompts/$name"
+    local target=".colog/prompts/$name"
+    local stored=".colog/templates/prompts/$name"
 
     if [[ ! -f "$target" ]]; then
       cp "$prompt" "$target"
@@ -457,14 +457,14 @@ cmd_update() {
     elif [[ -f "$stored" ]] && diff -q "$prompt" "$stored" > /dev/null 2>&1; then
       info "  = $name (unchanged)"
     else
-      warn "  ~ $name (differs — use 'collalog sync' to review)"
+      warn "  ~ $name (differs — use 'colog sync' to review)"
     fi
   done
 
   # Update stored templates
-  cp "$source/templates/commands"/*.md ".collalog/templates/commands/" 2>/dev/null || true
-  cp "$source/templates/skills"/*.md ".collalog/templates/skills/" 2>/dev/null || true
-  cp "$source/templates/prompts"/*.md ".collalog/templates/prompts/" 2>/dev/null || true
+  cp "$source/templates/commands"/*.md ".colog/templates/commands/" 2>/dev/null || true
+  cp "$source/templates/skills"/*.md ".colog/templates/skills/" 2>/dev/null || true
+  cp "$source/templates/prompts"/*.md ".colog/templates/prompts/" 2>/dev/null || true
 
   echo ""
   log "Update complete."
@@ -473,12 +473,12 @@ cmd_update() {
 # ─── SYNC ──────────────────────────────────────────────────────────────────
 
 cmd_sync() {
-  if [[ ! -d ".collalog" ]]; then
-    error "Not a collalog project."
+  if [[ ! -d ".colog" ]]; then
+    error "Not a colog project."
     exit 1
   fi
 
-  local config=".collalog/config.yaml"
+  local config=".colog/config.yaml"
   local source
   source=$(grep 'template_source:' "$config" | sed 's/.*: "//' | tr -d '"')
 
@@ -518,11 +518,11 @@ cmd_sync() {
 
   # Compare skills
   echo ""
-  info "Skills (.collalog/skills):"
+  info "Skills (.colog/skills):"
   for skill in "$source/templates/skills"/*.md; do
     [[ -f "$skill" ]] || continue
     local name=$(basename "$skill")
-    local target=".collalog/skills/$name"
+    local target=".colog/skills/$name"
 
     if [[ ! -f "$target" ]]; then
       warn "  [missing] $name"
@@ -539,11 +539,11 @@ cmd_sync() {
 
   # Compare prompts
   echo ""
-  info "Prompts (.collalog/prompts):"
+  info "Prompts (.colog/prompts):"
   for prompt in "$source/templates/prompts"/*.md; do
     [[ -f "$prompt" ]] || continue
     local name=$(basename "$prompt")
-    local target=".collalog/prompts/$name"
+    local target=".colog/prompts/$name"
 
     if [[ ! -f "$target" ]]; then
       warn "  [missing] $name"
@@ -562,7 +562,7 @@ cmd_sync() {
   if [[ "$has_diff" == false ]]; then
     log "Everything in sync."
   else
-    log "Use 'collalog update' to pull latest templates."
+    log "Use 'colog update' to pull latest templates."
   fi
 }
 
@@ -588,7 +588,7 @@ case "$CMD" in
   setup)    cmd_setup "$@" ;;
   update)   cmd_update "$@" ;;
   sync)     cmd_sync "$@" ;;
-  version)  echo "collalog v${VERSION}" ;;
+  version)  echo "colog v${VERSION}" ;;
   "")       usage ;;
   *)        error "Unknown command: $CMD"; usage; exit 1 ;;
 esac

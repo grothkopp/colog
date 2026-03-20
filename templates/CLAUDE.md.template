@@ -8,16 +8,16 @@ _Short project description_
 |------|----------|------|
 | | | |
 
-> Run `/collalog:setup` to configure this file.
+> Run `/colog:setup` to configure this file.
 
 ## Git
 
-Check `collalog/project.md` → `## Git` → `Enabled:` before running any git command.
+Check `colog/project.md` → `## Git` → `Enabled:` before running any git command.
 If `Enabled: no`, skip ALL git operations (commits, status, log, push) silently.
 
 ## Unified Log
 
-The central project log lives at `collalog/log.md`. Every meaningful event
+The central project log lives at `colog/log.md`. Every meaningful event
 (changes, decisions, tasks, ideas, notes, milestones) gets a log entry here.
 Newest entries first. The task list and memory are snapshots derived from it.
 
@@ -27,18 +27,18 @@ prepend via temp file + cat, read recent entries via awk/grep.
 
 ## Commands
 
-User-invokable commands (e.g., in Claude Code: `/project:collalog.setup`):
+User-invokable commands (e.g., in Claude Code: `/project:colog.setup`):
 
 | Command | Description |
 |---------|-------------|
-| /collalog:setup | One-time project setup wizard |
-| /collalog:log | Manually add a log entry |
-| /collalog:save | Save current work (log changes + commit) |
-| /collalog:status | Quick project overview |
+| /colog:setup | One-time project setup wizard |
+| /colog:log | Manually add a log entry |
+| /colog:save | Save current work (log changes + commit) |
+| /colog:status | Quick project overview |
 
 ## Skills
 
-Agent rules in `.collalog/skills/` (always active, not directly invoked):
+Agent rules in `.colog/skills/` (always active, not directly invoked):
 
 | Skill | Description |
 |-------|-------------|
@@ -46,11 +46,11 @@ Agent rules in `.collalog/skills/` (always active, not directly invoked):
 | git | Commit conventions |
 | task-management | Task list as snapshot of the log |
 | memory | Optional project memory snapshot |
-| collalog-sync | Sync with collalog template repo |
+| colog-sync | Sync with colog template repo |
 
 ## Prompts
 
-Scheduled agent behaviors in `.collalog/prompts/`:
+Scheduled agent behaviors in `.colog/prompts/`:
 
 | Prompt | Schedule | Description |
 |--------|----------|-------------|
@@ -59,21 +59,21 @@ Scheduled agent behaviors in `.collalog/prompts/`:
 
 ## Current User
 
-Read `collalog/me.md` for the current user's identity (name, shortcut, email).
+Read `colog/me.md` for the current user's identity (name, shortcut, email).
 Use the shortcut for log entries and task ownership. This file is local and gitignored.
-If it doesn't exist, ask the user to run `/collalog:setup` or use `@Agent`.
+If it doesn't exist, ask the user to run `/colog:setup` or use `@Agent`.
 
 ## Workspace Structure
 
 ```
-collalog/
+colog/
   log.md               Unified project log (source of truth)
   tasks.md             Task snapshot (derived from log)
   project.md           Project description, team, config
   me.md                Current user identity (local, gitignored)
   memory.md            Optional memory snapshot
 .claude/commands/      Commands (user invokes these)
-.collalog/
+.colog/
   skills/              Agent rules (always active)
   prompts/             Scheduled behaviors
   templates/           Original templates (for sync)
@@ -84,7 +84,7 @@ CLAUDE.md              This file
 ## Communication
 
 The agent communicates with the team through the configured messaging platform.
-All significant interactions should be logged in collalog/log.md.
+All significant interactions should be logged in colog/log.md.
 
 ## Formatting
 
