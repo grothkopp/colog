@@ -12,7 +12,7 @@ Show a quick overview of the current project state.
 
 1. **Read project info**: `collalog/project.md` for team and description
 2. **Open tasks**: `collalog/tasks.md` — list open tasks grouped by owner
-3. **Recent activity**: Last 5-10 entries from `collalog/log.md`
+3. **Recent activity**: Last 5-10 entries from `collalog/log.md` — use `awk '/^---$/{c++} c>=10{exit} {print}' collalog/log.md` (NEVER read the whole file)
 4. **Git status** (only if git enabled in project.md → `## Git`): uncommitted changes, unpushed commits
 5. **Format as a concise summary**
 

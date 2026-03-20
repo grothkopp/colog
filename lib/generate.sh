@@ -64,6 +64,10 @@ If \`Enabled: no\`, skip ALL git operations (commits, status, log, push) silentl
 The central project log lives at \`collalog/log.md\`. Every meaningful event
 gets a log entry here. Newest entries first.
 
+**Important:** NEVER read the entire log file or rewrite it to add entries.
+Use the efficient shell operations described in the log-format skill:
+prepend via temp file + cat, read recent entries via awk/grep.
+
 ## Commands
 
 | Command | Description |

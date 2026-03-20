@@ -16,7 +16,7 @@ First, check `collalog/project.md` → `## Git` to see if git is enabled.
 **If git is enabled:**
 
 1. **Detect changes**: Run `git status` and `git diff --stat` to see what changed
-2. **Create log entries**: For each logical group of changes, add a [change] entry to `collalog/log.md`
+2. **Create log entries**: For each logical group of changes, prepend a [change] entry to `collalog/log.md` using the shell method from the log-format skill (batch all entries into one temp file, prepend once)
 3. **Update tasks**: If changes relate to open tasks in `collalog/tasks.md`, mark them complete or update status
 4. **Stage and commit**: `git add` relevant files, commit with message matching the log entry type and title
 5. **Summary**: Tell the user what was saved
@@ -24,7 +24,7 @@ First, check `collalog/project.md` → `## Git` to see if git is enabled.
 **If git is disabled:**
 
 1. **Ask the user** what they worked on (no auto-detection without git)
-2. **Create log entries**: Add [change] entries to `collalog/log.md`
+2. **Create log entries**: Prepend [change] entries to `collalog/log.md` using the shell method from the log-format skill
 3. **Update tasks**: If changes relate to open tasks, update `collalog/tasks.md`
 4. **Summary**: Tell the user what was logged
 

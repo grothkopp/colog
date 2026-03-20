@@ -21,6 +21,10 @@ The central project log lives at `collalog/log.md`. Every meaningful event
 (changes, decisions, tasks, ideas, notes, milestones) gets a log entry here.
 Newest entries first. The task list and memory are snapshots derived from it.
 
+**Important:** NEVER read the entire log file or rewrite it to add entries.
+Use the efficient shell operations described in the log-format skill:
+prepend via temp file + cat, read recent entries via awk/grep.
+
 ## Commands
 
 User-invokable commands (e.g., in Claude Code: `/project:collalog.setup`):
