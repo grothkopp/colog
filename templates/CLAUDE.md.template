@@ -39,6 +39,7 @@ User-invokable commands (e.g., in Claude Code: `/project:colog.setup`):
 | /colog:log | Log an event (creates a commit) |
 | /colog:save | Save current work (stage + semantic commits) |
 | /colog:status | Quick project overview |
+| /colog:ask | Ask about project history, decisions, changes |
 
 ## Skills
 
@@ -47,6 +48,7 @@ Agent rules in `.colog/skills/` (always active, not directly invoked):
 | Skill | Description |
 |-------|-------------|
 | git | Semantic commit format, reading the log, common actions |
+| ask | Searching the project history (git log, blame, pickaxe) |
 | task-management | Task list as snapshot with commit references |
 | memory | Optional project memory snapshot |
 | colog-sync | Sync with colog template repo |
