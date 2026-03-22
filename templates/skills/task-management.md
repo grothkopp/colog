@@ -1,6 +1,8 @@
 # Skill: Task Management
 
-Rules for maintaining the task snapshot at `colog/tasks.md`.
+> Paths: see CLAUDE.md → Configuration → Paths
+
+Rules for maintaining the task snapshot (default: `colog/tasks.md`).
 
 The task list is a live snapshot of open work. Tasks are created and completed
 via `task()` commits in git. The tasks.md file is the readable view.

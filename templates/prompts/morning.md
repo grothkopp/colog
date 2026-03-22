@@ -1,7 +1,7 @@
 # Prompt: Morning Briefing
 
-> Schedule: Daily at configured time, weekdays (configured during /colog:setup)
-> Default: 08:00, weekdays
+> Paths, identity, and schedule: see CLAUDE.md → Configuration
+> Default schedule: 08:00, weekdays
 > Skills: git, task-management
 
 ## Purpose

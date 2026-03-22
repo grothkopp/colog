@@ -78,34 +78,39 @@ Scheduled agent behaviors in \`.colog/prompts/\`:
 | heartbeat | Every 30 min | Scheduled trigger for /colog:sync |
 | morning | Daily 8:00 | Runs /colog:sync + /colog:status, sends daily briefing |
 
-## Current User
+## Configuration
 
-Read \`colog/me.md\` for the current user's identity (name, shortcut, email).
-Use the shortcut in commit messages (\`@Shortcut\`). This file is local and gitignored.
-If it doesn't exist, ask the user to run \`/colog:setup\` or use \`@Agent\`.
+All paths and settings are configured here. Commands and prompts always
+reference this section — never hardcode paths or assumptions.
+
+### Paths
+
+| File | Path | Description |
+|------|------|-------------|
+| Tasks | \`colog/tasks.md\` | Task snapshot with commit references |
+| Project | \`colog/project.md\` | Project description, team, schedule |
+| Identity | \`colog/me.md\` | Current user (local, gitignored) |
+| Memory | \`colog/memory.md\` | Optional project memory |
+
+### Current User Identity
+
+How to determine the current user:
+
+- **Method**: \`me.md\` file (default)
+- **File**: \`colog/me.md\` — contains name, email, and @Shortcut
+- **Usage**: Always use \`--author="First Last <email>"\` from the identity source
+- **Fallback**: If identity cannot be determined, use \`@Agent\`
 
 IMPORTANT: Do not rely on \`git config user.name\` for identity — the git user
-may always be the agent. Always use \`--author="First Last <email>"\` from me.md
-when creating commits, so git correctly attributes them. The \`@user\` shortcut
-in commit messages is the human-readable identifier.
+may always be the agent. The \`@user\` shortcut in commit messages is the
+human-readable identifier.
 
-## Workspace Structure
+### Conversation Source
 
-\`\`\`
-colog/
-  tasks.md             Task snapshot (with commit references)
-  project.md           Project description, team, config
-  me.md                Current user identity (local, gitignored)
-  memory.md            Optional memory snapshot
-${commands_dir:-".claude/commands"}/
-  colog.*.md        Commands (user invokes these)
-.colog/
-  skills/              Agent rules (always active)
-  prompts/             Scheduled behaviors
-  templates/           Original templates (for sync)
-  config.yaml          Configuration
-CLAUDE.md              This file
-\`\`\`
+How to access recent conversations for event detection during \`/colog:sync\`:
+
+- **Method**: _configured during /colog:setup_
+- **Access**: _e.g., chat history API, message database, log file, or "none"_
 
 ## Communication
 COLOG_INNER

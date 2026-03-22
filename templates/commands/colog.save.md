@@ -1,5 +1,7 @@
 # /colog:save — Save Current Work
 
+> Paths and identity method: see CLAUDE.md → Configuration
+
 Capture the current state of work: commit file changes with semantic messages, update tasks.
 
 ## Usage

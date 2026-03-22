@@ -1,5 +1,7 @@
 # Skill: Git — The Project Log
 
+> Paths and identity method: see CLAUDE.md → Configuration
+
 Git is the single source of truth for the project log. Every meaningful event —
 changes, decisions, tasks, ideas, notes, milestones — is a git commit.
 There is no separate log file.
@@ -31,14 +33,14 @@ Leave empty for general entries: `note(): ...`
 ### User Identity
 
 The `@user` at the end identifies who initiated the action.
-Read from `colog/me.md` — NEVER rely on `git config user.name` (the git user
+Read from the identity source (see CLAUDE.md → Configuration) — NEVER rely on `git config user.name` (the git user
 may always be the agent, not the human).
 
-If `colog/me.md` doesn't exist, use `@Agent`.
+If identity cannot be determined, use `@Agent`.
 
 ### Git Author
 
-Set the commit author to the actual user from `colog/me.md` using `--author`:
+Set the commit author to the actual user from the identity source using `--author`:
 
 ```bash
 git commit --author="First Last <email>" -m "type(subject): description @Shortcut"
@@ -47,7 +49,7 @@ git commit --author="First Last <email>" -m "type(subject): description @Shortcu
 This way `git log` and `git shortlog` correctly attribute commits to the person
 who initiated them, even when the agent is the one running git.
 
-If the user has no email in `me.md`, use `shortcut@colog` as placeholder
+If the user has no email in the identity source, use `shortcut@colog` as placeholder
 (e.g., `SG@colog`).
 
 ### Examples
@@ -151,7 +153,7 @@ git commit --allow-empty --author="Stefan Grothkopp <sg@example.com>" \
 
 - Commit after every logical unit of change
 - Write meaningful commit messages — they ARE the project log
-- Always use `--author` with the user's name and email from `colog/me.md`
+- Always use `--author` with the user's name and email from the identity source
 - Never auto-push; commits stay local until explicitly pushed
 - One commit per logical event (don't batch unrelated things)
 - Include the @user shortcut from me.md in every commit message

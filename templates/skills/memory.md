@@ -1,6 +1,8 @@
 # Skill: Memory
 
-Rules for the optional memory snapshot at `colog/memory.md`.
+> Paths: see CLAUDE.md → Configuration
+
+Rules for the optional memory snapshot.
 
 Memory is a condensed current-state view of the project — a cheat sheet
 organized for quick reference.

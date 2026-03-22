@@ -1,7 +1,7 @@
 # Prompt: Heartbeat
 
-> Schedule: Every N minutes during working hours (configured during /colog:setup)
-> Default: Every 30 minutes, 08:00-18:00, weekdays
+> Paths and schedule: see CLAUDE.md → Configuration
+> Default schedule: Every 30 minutes, 08:00-18:00, weekdays
 
 ## Purpose
 
