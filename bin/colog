@@ -639,7 +639,13 @@ ME_INNER
   log "Next steps:"
   log "  1. Review CLAUDE.md and colog/project.md"
   log "  2. Set up scheduled tasks (heartbeat + morning)"
-  log "  3. git add -A && git commit -m 'change(colog): setup complete @Agent'"
+  local hint_shortcut="@Agent"
+  if [[ -n "$me_shortcut" ]]; then
+    hint_shortcut="$me_shortcut"
+  elif [[ -f "colog/me.md" ]]; then
+    hint_shortcut=$(grep -i '| Shortcut |' "colog/me.md" 2>/dev/null | tail -1 | sed 's/.*| //' | tr -d ' |' || echo "@Agent")
+  fi
+  log "  3. git add -A && git commit -m 'change(colog): setup complete ${hint_shortcut}'"
 }
 
 # ─── UPDATE ────────────────────────────────────────────────────────────────
@@ -722,6 +728,36 @@ cmd_update() {
       info "  = $name (unchanged)"
     else
       warn "  ~ $name (differs — use 'colog sync' to review)"
+    fi
+  done
+
+  # Remove obsolete skills/prompts/commands that no longer exist in templates
+  echo ""
+  log "Cleaning up obsolete files:"
+  for dir_pair in \
+    ".colog/skills:$source/templates/skills" \
+    ".colog/prompts:$source/templates/prompts"; do
+    local inst_dir="${dir_pair%%:*}"
+    local tmpl_dir="${dir_pair##*:}"
+    for installed in "$inst_dir"/*.md; do
+      [[ -f "$installed" ]] || continue
+      local fname=$(basename "$installed")
+      if [[ ! -f "$tmpl_dir/$fname" ]]; then
+        rm -f "$installed"
+        rm -f ".colog/templates/${inst_dir#.colog/}/$fname"
+        warn "  - ${inst_dir#./}/$fname (removed — no longer in templates)"
+      fi
+    done
+  done
+  # Same for commands (agent-specific filenames)
+  for installed in "$commands_dir"/colog.*.md; do
+    [[ -f "$installed" ]] || continue
+    local fname=$(basename "$installed")
+    local base_name="${fname%.md}"
+    if [[ ! -f "$source/templates/commands/${base_name}.md" ]]; then
+      rm -f "$installed"
+      rm -f ".colog/templates/commands/${base_name}.md"
+      warn "  - $commands_dir/$fname (removed — no longer in templates)"
     fi
   done
 
