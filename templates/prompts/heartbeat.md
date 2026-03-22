@@ -19,9 +19,13 @@ hours, do nothing and exit silently.
 1. **Read current user** — `colog/me.md` for @Shortcut, name, and email (if missing, use @Agent). Use `--author="First Last <email>"` on all commits.
 2. **Gather context** — Read recent conversations since last heartbeat
 3. **Sync tasks** — Two-way sync between `colog/tasks.md` and git:
-   - **tasks.md → git**: Compare `colog/tasks.md` against recent `task()` commits.
-     If a task was checked off in tasks.md (`- [x]`) but has no matching completion
-     commit, create one: `task(subject): completed - description (closes ORIGINAL_ID) @user`
+   - **Completed in tasks.md, no commit**: If a task is checked off (`- [x]`) but has
+     no `completed:` date/commit ID, create a completion commit:
+     `task(subject): completed - description (closes ORIGINAL_ID) @user`
+   - **New in tasks.md, no commit**: If a task has no commit reference (no 7-char hex ID),
+     it was added manually. Deduplicate first (check git log for matching `task()` commit
+     by description). If genuinely new, create: `task(subject): description @user` and
+     update the task line with the new commit ID.
    - **git → tasks.md**: If a `task()` commit exists but isn't reflected in tasks.md
      (new task or completion), update the file accordingly.
    - After all sync updates, commit tasks.md: `change(tasks): sync task status @user`

@@ -57,6 +57,19 @@ heartbeat detects the mismatch: a completed checkbox without a matching
 3. Updates the task in tasks.md with the completion commit ID and date
 4. Commits: `change(tasks): sync completion - description @user`
 
+### tasks.md → Git (manually added tasks)
+
+When someone adds a new task directly in tasks.md without going through the agent,
+it will have no commit reference (no short ID at the end). The heartbeat detects this
+and creates the corresponding git commit:
+
+1. Find tasks without a commit reference: `- [ ]` lines that have no short ID in parentheses
+2. Deduplicate: check git log for a matching `task()` commit (compare description text)
+   to avoid creating duplicates when someone just deleted the reference accidentally
+3. If genuinely new: create a commit: `task(subject): description @user`
+4. Update the task in tasks.md with the new commit's short ID and created date
+5. Commit: `change(tasks): sync new task from tasks.md - description @user`
+
 ### Git → tasks.md (commits without tasks.md entry)
 
 When a `task()` commit exists but tasks.md doesn't reflect it, the heartbeat:
@@ -65,7 +78,7 @@ When a `task()` commit exists but tasks.md doesn't reflect it, the heartbeat:
 2. For completions (commits with `closes XXXX`): marks the referenced task as `- [x]`
 3. Commits the tasks.md update
 
-### How to detect unsynced completions
+### How to detect sync gaps
 
 Compare tasks.md checkboxes against git log:
 
@@ -73,11 +86,15 @@ Compare tasks.md checkboxes against git log:
 # Find all task completion commits
 git log --oneline --grep="^task(" --grep="completed" --all-match
 
-# Compare against checked boxes in tasks.md that lack a completing commit ID
+# Checked boxes without a completing commit ID = needs completion sync
 grep '- \[x\]' colog/tasks.md | grep -v 'completed:'
+
+# Open tasks without ANY commit reference = manually added, needs creation sync
+grep '- \[ \]' colog/tasks.md | grep -vP '\b[0-9a-f]{7}\b'
 ```
 
-A checked task without a `completed:` date and commit ID = needs a sync commit.
+A checked task without a `completed:` date and commit ID = needs a completion commit.
+An open task without any 7-char hex ID = manually added, needs a creation commit.
 
 ## Rules
 
