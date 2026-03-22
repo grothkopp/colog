@@ -38,7 +38,8 @@ User-invokable commands (e.g., in Claude Code: `/project:colog.setup`):
 | /colog:setup | One-time project setup wizard |
 | /colog:log | Log an event (creates a commit) |
 | /colog:save | Save current work (stage + semantic commits) |
-| /colog:status | Quick project overview |
+| /colog:sync | Pull, sync tasks ↔ git, push |
+| /colog:status | Project overview (optional: `yesterday`, `last week`) |
 | /colog:ask | Ask about project history, decisions, changes |
 
 ## Skills
@@ -59,8 +60,8 @@ Scheduled agent behaviors in `.colog/prompts/`:
 
 | Prompt | Schedule | Description |
 |--------|----------|-------------|
-| heartbeat | Every 30 min | Commit events, update tasks from conversations |
-| morning | Daily 8:00 | Daily summary: tasks, recent commits, blockers |
+| heartbeat | Every 30 min | Runs /colog:sync, commits events from conversations |
+| morning | Daily 8:00 | Runs /colog:sync + /colog:status yesterday, sends daily briefing |
 
 ## Current User
 
