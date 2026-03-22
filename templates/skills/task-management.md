@@ -42,6 +42,43 @@ If me.md doesn't exist, ask explicitly or leave unassigned.
 3. Update tasks.md: change `- [ ]` to `- [x]`, add `completed:` date and commit ID
 4. Commit tasks.md update
 
+## Two-Way Sync
+
+Git and tasks.md must always be in sync. The heartbeat enforces this:
+
+### tasks.md → Git (manual completions)
+
+When someone checks off a task directly in tasks.md (`- [ ]` → `- [x]`), the
+heartbeat detects the mismatch: a completed checkbox without a matching
+`task(...): completed` commit. It then:
+
+1. Identifies the original task commit via the stored short ID (e.g., `abc1234`)
+2. Creates a completion commit: `task(subject): completed - description (closes abc1234) @user`
+3. Updates the task in tasks.md with the completion commit ID and date
+4. Commits: `change(tasks): sync completion - description @user`
+
+### Git → tasks.md (commits without tasks.md entry)
+
+When a `task()` commit exists but tasks.md doesn't reflect it, the heartbeat:
+
+1. For new tasks: adds `- [ ]` entry with commit reference
+2. For completions (commits with `closes XXXX`): marks the referenced task as `- [x]`
+3. Commits the tasks.md update
+
+### How to detect unsynced completions
+
+Compare tasks.md checkboxes against git log:
+
+```bash
+# Find all task completion commits
+git log --oneline --grep="^task(" --grep="completed" --all-match
+
+# Compare against checked boxes in tasks.md that lack a completing commit ID
+grep '- \[x\]' colog/tasks.md | grep -v 'completed:'
+```
+
+A checked task without a `completed:` date and commit ID = needs a sync commit.
+
 ## Rules
 
 - Every task has a `created` date (YYYY-MM-DD) and commit short ID
