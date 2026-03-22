@@ -118,6 +118,13 @@ cmd_init() {
   fi
   target="$(cd "$target" && pwd)"
 
+  # Ensure we're in a git repository (or initialize one)
+  if ! git -C "$target" rev-parse --is-inside-work-tree &>/dev/null; then
+    log "No git repository found. Initializing..."
+    git -C "$target" init
+    log "Git repository initialized."
+  fi
+
   local commands_dir=$(get_commands_dir "$agent")
 
   log "Initializing colog in: $target"
@@ -240,7 +247,7 @@ YAML
   log "Done! Project initialized."
   echo ""
   log "What was installed:"
-  info "  colog/               Log, tasks, project (user-facing data)"
+  info "  colog/               Tasks, project (user-facing data)"
   info "  $commands_dir/     Commands (user invokes these)"
   info "  .colog/skills/       Skills (agent rules, always active)"
   info "  .colog/prompts/      Prompts (scheduled behaviors)"
@@ -272,7 +279,6 @@ cmd_setup() {
   local existing_lang=$(yaml_val "$config" "language")
   local existing_tech=$(yaml_val "$config" "technologies")
   local existing_comm=$(yaml_val "$config" "communication")
-  local existing_git=$(yaml_top_val "$config" "git_enabled")
 
   if [[ -n "$existing_name" ]]; then
     is_reconfigure=true
@@ -285,7 +291,6 @@ cmd_setup() {
     info "  Language: ${existing_lang:-en}"
     info "  Technologies: ${existing_tech}"
     info "  Communication: ${existing_comm}"
-    info "  Git: ${existing_git:-yes}"
     echo ""
   else
     log "Project Setup Wizard"
@@ -372,16 +377,6 @@ cmd_setup() {
     echo ""
   fi
 
-  local git_enabled="${existing_git:-yes}"
-  if ! git rev-parse --is-inside-work-tree &>/dev/null; then
-    info "No git repository detected."
-    read -rp "Use git for version control? [${existing_git:-no}]: " git_answer
-    git_enabled="${git_answer:-${existing_git:-no}}"
-  else
-    read -rp "Use git for version control? [${existing_git:-yes}]: " git_answer
-    git_enabled="${git_answer:-${existing_git:-yes}}"
-  fi
-
   echo ""
   log "Generating project configuration..."
 
@@ -399,7 +394,6 @@ language: "${project_lang}"
 initialized: "${initialized}"
 configured: "$(date -Iseconds)"
 template_source: "${template_source}"
-git_enabled: "${git_enabled}"
 
 project:
   name: "${project_name}"
@@ -447,9 +441,7 @@ ME_INNER
   log "Next steps:"
   log "  1. Review CLAUDE.md and colog/project.md"
   log "  2. Set up scheduled tasks (heartbeat + morning)"
-  if [[ "$git_enabled" == "yes" ]]; then
-    log "  3. git add -A && git commit -m 'org: colog setup complete'"
-  fi
+  log "  3. git add -A && git commit -m 'change(colog): setup complete @Agent'"
 }
 
 # ─── UPDATE ────────────────────────────────────────────────────────────────

@@ -27,63 +27,69 @@ generate_colog_section() {
   cat > "$section_file" << COLOG_INNER
 <!-- colog:start -->
 
-## Current User
+## Git as Log
 
-Read \`colog/me.md\` for the current user's identity (name, shortcut, email).
-Use the shortcut for log entries and task ownership. This file is local and gitignored.
-If it doesn't exist, ask the user to run \`/colog:setup\` or use \`@Agent\`.
+The git history IS the project log. Every meaningful event — changes, decisions,
+tasks, ideas, notes, milestones — is a git commit with a semantic message:
 
-## Git
+\`\`\`
+type(subject): short description @user
+\`\`\`
 
-Check \`colog/project.md\` → \`## Git\` → \`Enabled:\` before running any git command.
-If \`Enabled: no\`, skip ALL git operations (commits, status, log, push) silently.
+Types: \`change\`, \`decision\`, \`task\`, \`idea\`, \`note\`, \`milestone\`
 
-## Unified Log
+Use empty commits (\`git commit --allow-empty\`) for events without file changes:
+questions, decisions, ideas, observations.
 
-The central project log lives at \`colog/log.md\`. Every meaningful event
-gets a log entry here. Newest entries first.
-
-**Important:** NEVER read the entire log file or rewrite it to add entries.
-Use the efficient shell operations described in the log-format skill:
-prepend via temp file + cat, read recent entries via awk/grep.
+Read the log with: \`git log --oneline\`, \`git log --since="24 hours ago"\`,
+\`git log --grep="^decision"\`, \`git log --grep="@SG"\`.
 
 ## Commands
+
+User-invokable commands (e.g., in Claude Code: \`/project:colog.setup\`):
 
 | Command | Description |
 |---------|-------------|
 | /colog:setup | One-time project setup wizard |
-| /colog:log | Manually add a log entry |
-| /colog:save | Save current work (log changes + commit) |
+| /colog:log | Log an event (creates a commit) |
+| /colog:save | Save current work (stage + semantic commits) |
 | /colog:status | Quick project overview |
 
 ## Skills
 
-Agent rules in \`.colog/skills/\` (always active):
+Agent rules in \`.colog/skills/\` (always active, not directly invoked):
 
 | Skill | Description |
 |-------|-------------|
-| log-format | Log entry types, format, rules |
-| git | Commit conventions |
-| task-management | Task list as snapshot of the log |
+| git | Semantic commit format, reading the log, common actions |
+| task-management | Task list as snapshot with commit references |
 | memory | Optional project memory snapshot |
 | colog-sync | Sync with colog template repo |
 
 ## Prompts
 
-Scheduled behaviors in \`.colog/prompts/\`:
+Scheduled agent behaviors in \`.colog/prompts/\`:
 
 | Prompt | Schedule | Description |
 |--------|----------|-------------|
-| heartbeat | Every 30 min | Update log, tasks, memory from conversations |
-| morning | Daily 8:00 | Daily summary: tasks, log activity, blockers |
+| heartbeat | Every 30 min | Commit events, update tasks from conversations |
+| morning | Daily 8:00 | Daily summary: tasks, recent commits, blockers |
+
+## Current User
+
+Read \`colog/me.md\` for the current user's identity (name, shortcut, email).
+Use the shortcut in commit messages (\`@Shortcut\`). This file is local and gitignored.
+If it doesn't exist, ask the user to run \`/colog:setup\` or use \`@Agent\`.
+
+IMPORTANT: Do not rely on \`git config user.name\` for identity — the git user
+may always be the agent. The \`@user\` in commit messages is the source of truth.
 
 ## Workspace Structure
 
 \`\`\`
 colog/
-  log.md               Unified project log (source of truth)
-  tasks.md             Task snapshot
-  project.md           Project description, team
+  tasks.md             Task snapshot (with commit references)
+  project.md           Project description, team, config
   me.md                Current user identity (local, gitignored)
   memory.md            Optional memory snapshot
 ${commands_dir:-".claude/commands"}/
@@ -105,7 +111,8 @@ COLOG_INNER
   fi
   cat >> "$section_file" << 'COLOG_INNER'
 
-All significant interactions should be logged in colog/log.md.
+The agent communicates with the team through the configured messaging platform.
+All significant interactions should be committed to git.
 
 ## Formatting
 
@@ -214,8 +221,6 @@ generate_project_md() {
   local desc=$(yaml_val "$config" "description")
   local tech=$(yaml_val "$config" "technologies")
   local comm=$(yaml_val "$config" "communication")
-  local git_enabled=$(yaml_top_val "$config" "git_enabled")
-  git_enabled="${git_enabled:-yes}"
 
   cat > "$output" << PROJECT_INNER
 # Project: ${name}
@@ -247,10 +252,6 @@ PROJECT_INNER
   echo "" >> "$output"
   echo "${comm:-TBD}" >> "$output"
   echo "" >> "$output"
-  echo "## Git" >> "$output"
-  echo "" >> "$output"
-  echo "- Enabled: ${git_enabled}" >> "$output"
-  echo "" >> "$output"
   echo "## Schedule" >> "$output"
   echo "" >> "$output"
   echo "- Morning briefing: 08:00, weekdays" >> "$output"
@@ -273,9 +274,9 @@ generate_tasks() {
 
 ## Setup
 - [ ] Review and customize CLAUDE.md (created: $(date '+%Y-%m-%d %H:%M'))
+- [ ] Review agent skills (created: $(date '+%Y-%m-%d %H:%M'))
 - [ ] Set up heartbeat task (created: $(date '+%Y-%m-%d %H:%M'))
 - [ ] Set up morning briefing task (created: $(date '+%Y-%m-%d %H:%M'))
-- [ ] Initial git commit (created: $(date '+%Y-%m-%d %H:%M'))
 
 ## Content
 

@@ -12,20 +12,22 @@ _Short project description_
 
 <!-- colog:start -->
 
-## Git
+## Git as Log
 
-Check `colog/project.md` → `## Git` → `Enabled:` before running any git command.
-If `Enabled: no`, skip ALL git operations (commits, status, log, push) silently.
+The git history IS the project log. Every meaningful event — changes, decisions,
+tasks, ideas, notes, milestones — is a git commit with a semantic message:
 
-## Unified Log
+```
+type(subject): short description @user
+```
 
-The central project log lives at `colog/log.md`. Every meaningful event
-(changes, decisions, tasks, ideas, notes, milestones) gets a log entry here.
-Newest entries first. The task list and memory are snapshots derived from it.
+Types: `change`, `decision`, `task`, `idea`, `note`, `milestone`
 
-**Important:** NEVER read the entire log file or rewrite it to add entries.
-Use the efficient shell operations described in the log-format skill:
-prepend via temp file + cat, read recent entries via awk/grep.
+Use empty commits (`git commit --allow-empty`) for events without file changes:
+questions, decisions, ideas, observations.
+
+Read the log with: `git log --oneline`, `git log --since="24 hours ago"`,
+`git log --grep="^decision"`, `git log --grep="@SG"`.
 
 ## Commands
 
@@ -34,8 +36,8 @@ User-invokable commands (e.g., in Claude Code: `/project:colog.setup`):
 | Command | Description |
 |---------|-------------|
 | /colog:setup | One-time project setup wizard |
-| /colog:log | Manually add a log entry |
-| /colog:save | Save current work (log changes + commit) |
+| /colog:log | Log an event (creates a commit) |
+| /colog:save | Save current work (stage + semantic commits) |
 | /colog:status | Quick project overview |
 
 ## Skills
@@ -44,9 +46,8 @@ Agent rules in `.colog/skills/` (always active, not directly invoked):
 
 | Skill | Description |
 |-------|-------------|
-| log-format | How to write log entries (types, format, rules) |
-| git | Commit conventions |
-| task-management | Task list as snapshot of the log |
+| git | Semantic commit format, reading the log, common actions |
+| task-management | Task list as snapshot with commit references |
 | memory | Optional project memory snapshot |
 | colog-sync | Sync with colog template repo |
 
@@ -56,21 +57,23 @@ Scheduled agent behaviors in `.colog/prompts/`:
 
 | Prompt | Schedule | Description |
 |--------|----------|-------------|
-| heartbeat | Every 30 min | Update log, tasks, memory from conversations |
-| morning | Daily 8:00 | Daily summary: tasks, log activity, blockers |
+| heartbeat | Every 30 min | Commit events, update tasks from conversations |
+| morning | Daily 8:00 | Daily summary: tasks, recent commits, blockers |
 
 ## Current User
 
 Read `colog/me.md` for the current user's identity (name, shortcut, email).
-Use the shortcut for log entries and task ownership. This file is local and gitignored.
+Use the shortcut in commit messages (`@Shortcut`). This file is local and gitignored.
 If it doesn't exist, ask the user to run `/colog:setup` or use `@Agent`.
+
+IMPORTANT: Do not rely on `git config user.name` for identity — the git user
+may always be the agent. The `@user` in commit messages is the source of truth.
 
 ## Workspace Structure
 
 ```
 colog/
-  log.md               Unified project log (source of truth)
-  tasks.md             Task snapshot (derived from log)
+  tasks.md             Task snapshot (with commit references)
   project.md           Project description, team, config
   me.md                Current user identity (local, gitignored)
   memory.md            Optional memory snapshot
@@ -86,7 +89,7 @@ CLAUDE.md              This file
 ## Communication
 
 The agent communicates with the team through the configured messaging platform.
-All significant interactions should be logged in colog/log.md.
+All significant interactions should be committed to git.
 
 ## Formatting
 

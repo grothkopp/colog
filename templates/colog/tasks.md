@@ -7,7 +7,6 @@
 - [ ] Review agent skills (created: _date_)
 - [ ] Set up heartbeat task (created: _date_)
 - [ ] Set up morning briefing task (created: _date_)
-- [ ] Initial git commit (created: _date_)
 
 ## Content
 
