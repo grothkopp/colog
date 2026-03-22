@@ -118,11 +118,61 @@ cmd_init() {
   fi
   target="$(cd "$target" && pwd)"
 
-  # Ensure we're in a git repository (or initialize one)
+  # Ensure we're in a git repository
   if ! git -C "$target" rev-parse --is-inside-work-tree &>/dev/null; then
-    log "No git repository found. Initializing..."
-    git -C "$target" init
-    log "Git repository initialized."
+    echo ""
+    warn "No git repository found in: $target"
+    echo ""
+    info "  1) Initialize a new git repo here"
+    info "  2) Clone an existing remote repo"
+    echo ""
+    read -rp "Choose [1/2]: " git_choice
+
+    case "${git_choice:-1}" in
+      2)
+        read -rp "Remote URL (e.g., https://github.com/user/repo.git): " remote_url
+        if [[ -z "$remote_url" ]]; then
+          error "No URL provided. Aborting."
+          exit 1
+        fi
+        log "Cloning $remote_url into $target..."
+        git clone "$remote_url" "$target.tmp"
+        # Move cloned contents into target (which may already have files)
+        mv "$target.tmp/.git" "$target/.git"
+        # Copy any cloned files that don't conflict
+        shopt -s dotglob
+        for f in "$target.tmp"/*; do
+          local fname=$(basename "$f")
+          [[ "$fname" == ".git" ]] && continue
+          if [[ ! -e "$target/$fname" ]]; then
+            mv "$f" "$target/"
+          fi
+        done
+        shopt -u dotglob
+        rm -rf "$target.tmp"
+        log "Repository cloned successfully."
+        ;;
+      *)
+        git -C "$target" init
+        log "Git repository initialized."
+        # Stage any existing files
+        local existing_files
+        existing_files=$(git -C "$target" ls-files --others --exclude-standard 2>/dev/null | head -5)
+        if [[ -n "$existing_files" ]]; then
+          local file_count
+          file_count=$(git -C "$target" ls-files --others --exclude-standard 2>/dev/null | wc -l)
+          info "Found $file_count existing file(s) in the directory."
+          read -rp "Add existing files to the initial commit? [yes]: " add_existing
+          if [[ "${add_existing:-yes}" != "no" ]]; then
+            git -C "$target" add -A
+            git -C "$target" commit -m "change(init): add existing project files"
+            log "Existing files committed."
+          fi
+        fi
+        ;;
+    esac
+  else
+    info "Git repository detected."
   fi
 
   local commands_dir=$(get_commands_dir "$agent")
