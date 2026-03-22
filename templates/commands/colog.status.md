@@ -1,38 +1,74 @@
 # /colog:status — Project Overview
 
-Show a quick overview of the current project state.
+> Paths and identity method: see CLAUDE.md → Configuration
+
+Show a summary of the project state, optionally scoped to a time range.
 
 ## Usage
 
 ```
-/colog:status
+/colog:status                   # Open tasks + last 24h activity
+/colog:status open              # Uncommitted changes and unpushed work
+/colog:status last week         # Activity from the last 7 days
+/colog:status 2026-03-01..now   # Activity since a specific date
 ```
+
+## Parameters
+
+- No parameter → open tasks + last 24h of activity (default for daily briefing)
+- `open` → uncommitted file changes, unstaged work, unpushed commits
+- `today` → since midnight
+- `last week` / `last 7 days` → last 7 days
+- `YYYY-MM-DD..now` → since a specific date
+- `YYYY-MM-DD..YYYY-MM-DD` → specific date range
 
 ## Steps
 
 1. **Read project info**: `colog/project.md` for team and description
-2. **Open tasks**: `colog/tasks.md` — list open tasks grouped by owner
-3. **Recent activity**: Last 5-10 entries from `colog/log.md` — use `awk '/^---$/{c++} c>=10{exit} {print}' colog/log.md` (NEVER read the whole file)
-4. **Git status** (only if git enabled in project.md → `## Git`): uncommitted changes, unpushed commits
+2. **Read current user**: `colog/me.md` for @Shortcut
+
+### Default (no parameter / time range)
+
+3. **Open tasks**: `colog/tasks.md` — list open tasks grouped by owner
+   - Highlight overdue tasks (due date in the past)
+   - Flag blocked tasks
+4. **Activity**: `git log --since="RANGE" --format="%h %s (%ar)"` for commits in range
+   - Group by type: decisions, tasks completed, changes, ideas, notes
+   - Show count per user
+   - **Cluster related commits**: When multiple commits share the same subject
+     (e.g., 12× `change(slides): ...`), collapse them into one summary line
+     like "slides: 12 changes by @SG" instead of listing each individually.
+     Only show individual entries for subjects with ≤3 commits or for
+     decisions/milestones (which are always listed individually).
 5. **Format as a concise summary**
 
-## Output Format
+### `open` parameter
+
+3. **Uncommitted changes**: `git status` — modified, staged, untracked files
+4. **Unpushed commits**: `git log @{u}..HEAD --oneline` (if remote exists)
+5. **Unstaged file changes**: `git diff --stat`
+
+## Output Format (default)
 
 ```
-**Project:** [name]
-**Team:** @SG, @NR, @AP
+Project: [name]
+Team: @SG, @NR, @AP
 
-**Open Tasks** (N)
+Open Tasks (N)
 @SG: task1, task2
 @NR: task3
 Unassigned: task4
 
-**Recent Activity**
-- [decision] Title (2h ago)
-- [change] Title (yesterday)
-- [task] Title (2 days ago)
+Activity (last 24h, N commits)
+  Decisions: 2  |  Tasks completed: 3  |  Changes: 8
+  Most active: @SG (7), @NR (4)
 
-**Git:** 3 uncommitted files, 2 unpushed commits  ← only if git enabled
+  Topics:
+  - slides: 12 changes by @SG
+  - colog: 3 changes by @SG
+  - decision(db): use PostgreSQL @SG (2h ago)
+  - decision(api): switch to REST @NR (5h ago)
+  - change(auth): add JWT refresh @NR (yesterday)
 ```
 
 ## Important
@@ -40,3 +76,5 @@ Unassigned: task4
 - Keep it brief — this is a quick glance, not a deep dive
 - Use relative times ("2h ago", "yesterday") not absolute timestamps
 - If there's nothing noteworthy, say "All clear"
+- With a time range, focus on the activity section; tasks are always current state
+- The morning briefing uses `/colog:status` (default = last 24h)

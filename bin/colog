@@ -85,6 +85,151 @@ Examples:
 EOF
 }
 
+# ─── AGENT PERMISSIONS ─────────────────────────────────────────────────────
+
+configure_agent_permissions() {
+  local target="$1" agent="$2"
+
+  case "$agent" in
+    claude)
+      # Claude Code: .claude/settings.json with allow/deny rules
+      local settings_file="$target/.claude/settings.json"
+      local colog_rules=(
+        'Bash(git status)'
+        'Bash(git log *)'
+        'Bash(git diff *)'
+        'Bash(git add *)'
+        'Bash(git commit *)'
+        'Bash(git fetch *)'
+        'Bash(git pull *)'
+        'Bash(git push)'
+        'Bash(git push *)'
+        'Bash(git branch *)'
+        'Bash(git checkout *)'
+        'Bash(git merge *)'
+        'Bash(git rebase *)'
+        'Bash(git rev-parse *)'
+        'Bash(git remote *)'
+        'Bash(git shortlog *)'
+        'Bash(git show *)'
+        'Bash(git stash *)'
+      )
+
+      # Build the JSON array of rules (reused below)
+      local rules_json
+      rules_json=$(printf '      "%s"' "${colog_rules[0]}"
+        for rule in "${colog_rules[@]:1}"; do
+          printf ',\n      "%s"' "$rule"
+        done)
+
+      mkdir -p "$target/.claude"
+
+      if [[ ! -f "$settings_file" ]]; then
+        # No settings file — create fresh
+        cat > "$settings_file" <<SETTINGS_JSON
+{
+  "permissions": {
+    "allow": [
+${rules_json}
+    ]
+  }
+}
+SETTINGS_JSON
+        info "  + .claude/settings.json (git permissions for colog)"
+
+      else
+        # Settings file exists — check if all rules are already present
+        local missing=0
+        for rule in "${colog_rules[@]}"; do
+          if ! grep -qF "\"$rule\"" "$settings_file"; then
+            ((missing++))
+          fi
+        done
+
+        if [[ $missing -eq 0 ]]; then
+          info "  = .claude/settings.json (git permissions already present)"
+        else
+          # Need to merge — try python3, then node, then sed fallback
+          local merged=false
+
+          if command -v python3 &>/dev/null; then
+            python3 << 'PYEOF' "$settings_file" "${colog_rules[@]}" && merged=true
+import json, sys
+settings_file = sys.argv[1]
+new_rules = sys.argv[2:]
+with open(settings_file, 'r') as f:
+    data = json.load(f)
+data.setdefault('permissions', {}).setdefault('allow', [])
+existing = set(data['permissions']['allow'])
+for rule in new_rules:
+    if rule not in existing:
+        data['permissions']['allow'].append(rule)
+with open(settings_file, 'w') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+PYEOF
+
+          elif command -v node &>/dev/null; then
+            node -e "
+const fs = require('fs');
+const f = process.argv[1];
+const rules = process.argv.slice(2);
+const data = JSON.parse(fs.readFileSync(f, 'utf8'));
+if (!data.permissions) data.permissions = {};
+if (!data.permissions.allow) data.permissions.allow = [];
+const existing = new Set(data.permissions.allow);
+for (const r of rules) { if (!existing.has(r)) data.permissions.allow.push(r); }
+fs.writeFileSync(f, JSON.stringify(data, null, 2) + '\n');
+" "$settings_file" "${colog_rules[@]}" && merged=true
+          fi
+
+          if [[ "$merged" == true ]]; then
+            info "  ~ .claude/settings.json (added colog git permissions)"
+          else
+            # Pure-bash fallback: find the allow array closing bracket and
+            # insert new rules before it. Works for standard formatted JSON.
+            if grep -q '"allow"' "$settings_file"; then
+              # Build insert text: new rules as JSON strings
+              local insert_lines=""
+              for rule in "${colog_rules[@]}"; do
+                if ! grep -qF "\"$rule\"" "$settings_file"; then
+                  insert_lines="${insert_lines},\n      \"$rule\""
+                fi
+              done
+              if [[ -n "$insert_lines" ]]; then
+                # Find the last entry in the allow array and append after it
+                # Strategy: replace the last line before ] in the allow block
+                sed -i -E '/^\s*"Bash\(/!b; :a; N; /\n\s*\]/!ba; s/("Bash\([^"]*\)")/\1'"$(echo -e "$insert_lines")"'/' "$settings_file" 2>/dev/null \
+                  && info "  ~ .claude/settings.json (added colog git permissions)" \
+                  || warn "  ! .claude/settings.json (could not merge — add git permissions manually)"
+              fi
+            else
+              # No allow array at all — warn but don't break
+              warn "  ! .claude/settings.json (no allow section — add git permissions manually)"
+            fi
+          fi
+        fi
+      fi
+      ;;
+
+    codex)
+      # OpenAI Codex CLI: uses CODEX.md or codex.json for config
+      # Codex has a --full-auto flag but no per-command permission file yet
+      info "  (Codex: grant git permissions via --full-auto flag or approval prompts)"
+      ;;
+
+    cursor)
+      # Cursor: no per-command permission config, uses interactive approval
+      info "  (Cursor: git commands will be approved interactively)"
+      ;;
+
+    *)
+      # Other agents: no known permission config
+      info "  (Agent permissions: configure git access per your agent's documentation)"
+      ;;
+  esac
+}
+
 # ─── INIT ──────────────────────────────────────────────────────────────────
 
 install_file() {
@@ -117,6 +262,63 @@ cmd_init() {
     log "Created directory: $target"
   fi
   target="$(cd "$target" && pwd)"
+
+  # Ensure we're in a git repository
+  if ! git -C "$target" rev-parse --is-inside-work-tree &>/dev/null; then
+    echo ""
+    warn "No git repository found in: $target"
+    echo ""
+    info "  1) Initialize a new git repo here"
+    info "  2) Clone an existing remote repo"
+    echo ""
+    read -rp "Choose [1/2]: " git_choice
+
+    case "${git_choice:-1}" in
+      2)
+        read -rp "Remote URL (e.g., https://github.com/user/repo.git): " remote_url
+        if [[ -z "$remote_url" ]]; then
+          error "No URL provided. Aborting."
+          exit 1
+        fi
+        log "Cloning $remote_url into $target..."
+        git clone "$remote_url" "$target.tmp"
+        # Move cloned contents into target (which may already have files)
+        mv "$target.tmp/.git" "$target/.git"
+        # Copy any cloned files that don't conflict
+        shopt -s dotglob
+        for f in "$target.tmp"/*; do
+          local fname=$(basename "$f")
+          [[ "$fname" == ".git" ]] && continue
+          if [[ ! -e "$target/$fname" ]]; then
+            mv "$f" "$target/"
+          fi
+        done
+        shopt -u dotglob
+        rm -rf "$target.tmp"
+        log "Repository cloned successfully."
+        ;;
+      *)
+        git -C "$target" init
+        log "Git repository initialized."
+        # Stage any existing files
+        local existing_files
+        existing_files=$(git -C "$target" ls-files --others --exclude-standard 2>/dev/null | head -5)
+        if [[ -n "$existing_files" ]]; then
+          local file_count
+          file_count=$(git -C "$target" ls-files --others --exclude-standard 2>/dev/null | wc -l)
+          info "Found $file_count existing file(s) in the directory."
+          read -rp "Add existing files to the initial commit? [yes]: " add_existing
+          if [[ "${add_existing:-yes}" != "no" ]]; then
+            git -C "$target" add -A
+            git -C "$target" commit -m "change(init): add existing project files"
+            log "Existing files committed."
+          fi
+        fi
+        ;;
+    esac
+  else
+    info "Git repository detected."
+  fi
 
   local commands_dir=$(get_commands_dir "$agent")
 
@@ -219,6 +421,9 @@ GITIGNORE
     info "  ~ CLAUDE.md (appended colog section to existing file)"
   fi
 
+  # Configure agent permissions (allow git commands without prompts)
+  configure_agent_permissions "$target" "$agent"
+
   # Write config
   cat > "$target/.colog/config.yaml" <<YAML
 # colog configuration
@@ -240,7 +445,7 @@ YAML
   log "Done! Project initialized."
   echo ""
   log "What was installed:"
-  info "  colog/               Log, tasks, project (user-facing data)"
+  info "  colog/               Tasks, project (user-facing data)"
   info "  $commands_dir/     Commands (user invokes these)"
   info "  .colog/skills/       Skills (agent rules, always active)"
   info "  .colog/prompts/      Prompts (scheduled behaviors)"
@@ -272,7 +477,6 @@ cmd_setup() {
   local existing_lang=$(yaml_val "$config" "language")
   local existing_tech=$(yaml_val "$config" "technologies")
   local existing_comm=$(yaml_val "$config" "communication")
-  local existing_git=$(yaml_top_val "$config" "git_enabled")
 
   if [[ -n "$existing_name" ]]; then
     is_reconfigure=true
@@ -285,7 +489,6 @@ cmd_setup() {
     info "  Language: ${existing_lang:-en}"
     info "  Technologies: ${existing_tech}"
     info "  Communication: ${existing_comm}"
-    info "  Git: ${existing_git:-yes}"
     echo ""
   else
     log "Project Setup Wizard"
@@ -372,16 +575,6 @@ cmd_setup() {
     echo ""
   fi
 
-  local git_enabled="${existing_git:-yes}"
-  if ! git rev-parse --is-inside-work-tree &>/dev/null; then
-    info "No git repository detected."
-    read -rp "Use git for version control? [${existing_git:-no}]: " git_answer
-    git_enabled="${git_answer:-${existing_git:-no}}"
-  else
-    read -rp "Use git for version control? [${existing_git:-yes}]: " git_answer
-    git_enabled="${git_answer:-${existing_git:-yes}}"
-  fi
-
   echo ""
   log "Generating project configuration..."
 
@@ -399,7 +592,6 @@ language: "${project_lang}"
 initialized: "${initialized}"
 configured: "$(date -Iseconds)"
 template_source: "${template_source}"
-git_enabled: "${git_enabled}"
 
 project:
   name: "${project_name}"
@@ -447,9 +639,13 @@ ME_INNER
   log "Next steps:"
   log "  1. Review CLAUDE.md and colog/project.md"
   log "  2. Set up scheduled tasks (heartbeat + morning)"
-  if [[ "$git_enabled" == "yes" ]]; then
-    log "  3. git add -A && git commit -m 'org: colog setup complete'"
+  local hint_shortcut="@Agent"
+  if [[ -n "$me_shortcut" ]]; then
+    hint_shortcut="$me_shortcut"
+  elif [[ -f "colog/me.md" ]]; then
+    hint_shortcut=$(grep -i '| Shortcut |' "colog/me.md" 2>/dev/null | tail -1 | sed 's/.*| //' | tr -d ' |' || echo "@Agent")
   fi
+  log "  3. git add -A && git commit -m 'change(colog): setup complete ${hint_shortcut}'"
 }
 
 # ─── UPDATE ────────────────────────────────────────────────────────────────
@@ -532,6 +728,36 @@ cmd_update() {
       info "  = $name (unchanged)"
     else
       warn "  ~ $name (differs — use 'colog sync' to review)"
+    fi
+  done
+
+  # Remove obsolete skills/prompts/commands that no longer exist in templates
+  echo ""
+  log "Cleaning up obsolete files:"
+  for dir_pair in \
+    ".colog/skills:$source/templates/skills" \
+    ".colog/prompts:$source/templates/prompts"; do
+    local inst_dir="${dir_pair%%:*}"
+    local tmpl_dir="${dir_pair##*:}"
+    for installed in "$inst_dir"/*.md; do
+      [[ -f "$installed" ]] || continue
+      local fname=$(basename "$installed")
+      if [[ ! -f "$tmpl_dir/$fname" ]]; then
+        rm -f "$installed"
+        rm -f ".colog/templates/${inst_dir#.colog/}/$fname"
+        warn "  - ${inst_dir#./}/$fname (removed — no longer in templates)"
+      fi
+    done
+  done
+  # Same for commands (agent-specific filenames)
+  for installed in "$commands_dir"/colog.*.md; do
+    [[ -f "$installed" ]] || continue
+    local fname=$(basename "$installed")
+    local base_name="${fname%.md}"
+    if [[ ! -f "$source/templates/commands/${base_name}.md" ]]; then
+      rm -f "$installed"
+      rm -f ".colog/templates/commands/${base_name}.md"
+      warn "  - $commands_dir/$fname (removed — no longer in templates)"
     fi
   done
 
