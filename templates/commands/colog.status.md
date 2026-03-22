@@ -35,6 +35,11 @@ Show a summary of the project state, optionally scoped to a time range.
 4. **Activity**: `git log --since="RANGE" --format="%h %s (%ar)"` for commits in range
    - Group by type: decisions, tasks completed, changes, ideas, notes
    - Show count per user
+   - **Cluster related commits**: When multiple commits share the same subject
+     (e.g., 12× `change(slides): ...`), collapse them into one summary line
+     like "slides: 12 changes by @SG" instead of listing each individually.
+     Only show individual entries for subjects with ≤3 commits or for
+     decisions/milestones (which are always listed individually).
 5. **Format as a concise summary**
 
 ### `open` parameter
@@ -58,9 +63,12 @@ Activity (last 24h, N commits)
   Decisions: 2  |  Tasks completed: 3  |  Changes: 8
   Most active: @SG (7), @NR (4)
 
-  Recent:
-  - abc1234 decision(db): use PostgreSQL @SG (2h ago)
-  - def5678 change(api): add rate limiting @NR (yesterday)
+  Topics:
+  - slides: 12 changes by @SG
+  - colog: 3 changes by @SG
+  - decision(db): use PostgreSQL @SG (2h ago)
+  - decision(api): switch to REST @NR (5h ago)
+  - change(auth): add JWT refresh @NR (yesterday)
 ```
 
 ## Important

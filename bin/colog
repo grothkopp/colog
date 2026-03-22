@@ -115,96 +115,100 @@ configure_agent_permissions() {
         'Bash(git stash *)'
       )
 
+      # Build the JSON array of rules (reused below)
+      local rules_json
+      rules_json=$(printf '      "%s"' "${colog_rules[0]}"
+        for rule in "${colog_rules[@]:1}"; do
+          printf ',\n      "%s"' "$rule"
+        done)
+
       mkdir -p "$target/.claude"
 
-      if [[ -f "$settings_file" ]]; then
-        # File exists — merge colog rules into existing allow list
-        local tmp_file="${settings_file}.tmp"
-        # Use a simple approach: read existing, add missing rules
-        local existing_content
-        existing_content=$(cat "$settings_file")
-
-        # Check if permissions.allow exists in the JSON
-        if echo "$existing_content" | grep -q '"allow"'; then
-          # Add rules that aren't already present
-          local added=0
-          for rule in "${colog_rules[@]}"; do
-            if ! echo "$existing_content" | grep -qF "\"$rule\""; then
-              ((added++))
-            fi
-          done
-          if [[ $added -gt 0 ]]; then
-            # Use python/node to safely merge JSON if available, otherwise
-            # use a simple sed approach for the common case
-            if command -v python3 &>/dev/null; then
-              python3 -c "
-import json, sys
-
-with open('$settings_file', 'r') as f:
-    data = json.load(f)
-
-if 'permissions' not in data:
-    data['permissions'] = {}
-if 'allow' not in data['permissions']:
-    data['permissions']['allow'] = []
-
-existing = set(data['permissions']['allow'])
-new_rules = $(printf '%s\n' "${colog_rules[@]}" | python3 -c "import sys,json; print(json.dumps([l.strip() for l in sys.stdin]))")
-
-for rule in new_rules:
-    if rule not in existing:
-        data['permissions']['allow'].append(rule)
-
-with open('$settings_file', 'w') as f:
-    json.dump(data, f, indent=2)
-    f.write('\n')
-" 2>/dev/null && info "  ~ .claude/settings.json (added colog git permissions)" || \
-              warn "  ~ .claude/settings.json (exists, please add git permissions manually)"
-            else
-              warn "  ~ .claude/settings.json (exists, please add git permissions manually)"
-            fi
-          else
-            info "  = .claude/settings.json (git permissions already present)"
-          fi
-        else
-          # Has settings file but no allow section — add permissions
-          if command -v python3 &>/dev/null; then
-            python3 -c "
-import json
-
-with open('$settings_file', 'r') as f:
-    data = json.load(f)
-
-if 'permissions' not in data:
-    data['permissions'] = {}
-
-data['permissions']['allow'] = data['permissions'].get('allow', []) + $(printf '%s\n' "${colog_rules[@]}" | python3 -c "import sys,json; print(json.dumps([l.strip() for l in sys.stdin]))")
-
-with open('$settings_file', 'w') as f:
-    json.dump(data, f, indent=2)
-    f.write('\n')
-" 2>/dev/null && info "  ~ .claude/settings.json (added colog git permissions)" || \
-            warn "  ~ .claude/settings.json (exists, please add git permissions manually)"
-          else
-            warn "  ~ .claude/settings.json (exists, please add git permissions manually)"
-          fi
-        fi
-      else
-        # Create new settings file with git permissions
+      if [[ ! -f "$settings_file" ]]; then
+        # No settings file — create fresh
         cat > "$settings_file" <<SETTINGS_JSON
 {
   "permissions": {
     "allow": [
-$(printf '      "%s"' "${colog_rules[0]}"
-for rule in "${colog_rules[@]:1}"; do
-  printf ',\n      "%s"' "$rule"
-done
-echo "")
+${rules_json}
     ]
   }
 }
 SETTINGS_JSON
         info "  + .claude/settings.json (git permissions for colog)"
+
+      else
+        # Settings file exists — check if all rules are already present
+        local missing=0
+        for rule in "${colog_rules[@]}"; do
+          if ! grep -qF "\"$rule\"" "$settings_file"; then
+            ((missing++))
+          fi
+        done
+
+        if [[ $missing -eq 0 ]]; then
+          info "  = .claude/settings.json (git permissions already present)"
+        else
+          # Need to merge — try python3, then node, then sed fallback
+          local merged=false
+
+          if command -v python3 &>/dev/null; then
+            python3 << 'PYEOF' "$settings_file" "${colog_rules[@]}" && merged=true
+import json, sys
+settings_file = sys.argv[1]
+new_rules = sys.argv[2:]
+with open(settings_file, 'r') as f:
+    data = json.load(f)
+data.setdefault('permissions', {}).setdefault('allow', [])
+existing = set(data['permissions']['allow'])
+for rule in new_rules:
+    if rule not in existing:
+        data['permissions']['allow'].append(rule)
+with open(settings_file, 'w') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+PYEOF
+
+          elif command -v node &>/dev/null; then
+            node -e "
+const fs = require('fs');
+const f = process.argv[1];
+const rules = process.argv.slice(2);
+const data = JSON.parse(fs.readFileSync(f, 'utf8'));
+if (!data.permissions) data.permissions = {};
+if (!data.permissions.allow) data.permissions.allow = [];
+const existing = new Set(data.permissions.allow);
+for (const r of rules) { if (!existing.has(r)) data.permissions.allow.push(r); }
+fs.writeFileSync(f, JSON.stringify(data, null, 2) + '\n');
+" "$settings_file" "${colog_rules[@]}" && merged=true
+          fi
+
+          if [[ "$merged" == true ]]; then
+            info "  ~ .claude/settings.json (added colog git permissions)"
+          else
+            # Pure-bash fallback: find the allow array closing bracket and
+            # insert new rules before it. Works for standard formatted JSON.
+            if grep -q '"allow"' "$settings_file"; then
+              # Build insert text: new rules as JSON strings
+              local insert_lines=""
+              for rule in "${colog_rules[@]}"; do
+                if ! grep -qF "\"$rule\"" "$settings_file"; then
+                  insert_lines="${insert_lines},\n      \"$rule\""
+                fi
+              done
+              if [[ -n "$insert_lines" ]]; then
+                # Find the last entry in the allow array and append after it
+                # Strategy: replace the last line before ] in the allow block
+                sed -i -E '/^\s*"Bash\(/!b; :a; N; /\n\s*\]/!ba; s/("Bash\([^"]*\)")/\1'"$(echo -e "$insert_lines")"'/' "$settings_file" 2>/dev/null \
+                  && info "  ~ .claude/settings.json (added colog git permissions)" \
+                  || warn "  ! .claude/settings.json (could not merge — add git permissions manually)"
+              fi
+            else
+              # No allow array at all — warn but don't break
+              warn "  ! .claude/settings.json (no allow section — add git permissions manually)"
+            fi
+          fi
+        fi
       fi
       ;;
 
