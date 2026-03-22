@@ -1,6 +1,6 @@
 # Prompt: Heartbeat
 
-> Paths and schedule: see CLAUDE.md → Configuration
+> Paths and schedule: see colog Configuration section
 > Default schedule: Every 30 minutes, 08:00-18:00, weekdays
 
 ## Purpose

@@ -1,6 +1,6 @@
 # Prompt: Morning Briefing
 
-> Paths, identity, and schedule: see CLAUDE.md → Configuration
+> Paths, identity, and schedule: see colog Configuration section
 > Default schedule: 08:00, weekdays
 > Skills: git, task-management
 

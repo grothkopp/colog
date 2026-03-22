@@ -1,6 +1,6 @@
 # /colog:status — Project Overview
 
-> Paths and identity method: see CLAUDE.md → Configuration
+> Paths and identity method: see colog Configuration section
 
 Show a summary of the project state, optionally scoped to a time range.
 

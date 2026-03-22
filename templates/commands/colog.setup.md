@@ -9,14 +9,14 @@ Can be run again on existing projects to update configuration.
 2. Asks for project details (name, description, team, technologies, communication)
 3. Configures paths, identity method, and conversation source
 4. Identifies the current user
-5. Creates or updates `CLAUDE.md` configuration section
+5. Creates or updates `the agent prompt file` configuration section
 6. Creates project files (project.md, tasks.md, me.md)
 7. Optionally seeds the git log from existing project data
 8. Sets up scheduled tasks (morning briefing + heartbeat) if the platform supports it
 
 ## Re-running Setup on Existing Projects
 
-If the CLAUDE.md configuration section already exists, this is a *reconfigure*:
+If the the agent prompt file configuration section already exists, this is a *reconfigure*:
 
 1. **Read the existing config first** — show the current configuration to the user
 2. **Ask what they want to change** — don't ask all questions from scratch
@@ -49,7 +49,7 @@ Ask one at a time:
 Ask: "Where should colog store its files? (default: `colog/`)"
 
 The user can specify a custom directory. All files (tasks.md, project.md, me.md, memory.md)
-will be stored there. Update the Paths table in the CLAUDE.md Configuration section.
+will be stored there. Update the Paths table in the the agent prompt file Configuration section.
 
 #### Identity Method
 
@@ -61,7 +61,7 @@ Options:
 3. **Environment variable** — e.g., `$COLOG_USER` or platform-specific
 4. **Other** — let the user describe their setup
 
-Store the chosen method in the CLAUDE.md Configuration section under "Current User Identity".
+Store the chosen method in the the agent prompt file Configuration section under "Current User Identity".
 
 #### Conversation Source
 
@@ -73,7 +73,7 @@ Options:
 3. **Platform API** — e.g., Slack API, Teams API
 4. **None** — sync will skip event detection; use `/colog:log` manually
 
-Store the chosen method in the CLAUDE.md Configuration section under "Conversation Source".
+Store the chosen method in the the agent prompt file Configuration section under "Conversation Source".
 
 ### 4. Current User
 
@@ -85,7 +85,7 @@ For shared agents: skip identity file, use `@Agent` instead.
 
 ### 5. Write Files
 
-- Update CLAUDE.md Configuration section with all settings
+- Update the agent prompt file Configuration section with all settings
 - Write project.md with project details and schedule
 - Write me.md (or equivalent based on identity method)
 - Write tasks.md with setup tasks (only if it doesn't exist)
@@ -127,6 +127,6 @@ Offer to import from git log, README, package files, and GitHub issues.
 - Be conversational, not robotic
 - Ask one question at a time
 - For team members, suggest shortcuts based on names (e.g., "Stefan Grothkopp" → "@SG")
-- If CLAUDE.md already has a colog section, update it rather than overwriting
+- If the agent prompt file already has a colog section, update it rather than overwriting
 - Make sensible suggestions for defaults but let the user override
 - All paths configured here are referenced by every other command — nothing is hardcoded elsewhere

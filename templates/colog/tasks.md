@@ -3,7 +3,7 @@
 > Last updated: _date_
 
 ## Setup
-- [ ] Review and customize CLAUDE.md
+- [ ] Review and customize agent prompt file
 - [ ] Review agent skills
 - [ ] Set up heartbeat task
 - [ ] Set up morning briefing task

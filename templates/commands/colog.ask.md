@@ -1,6 +1,6 @@
 # /colog:ask — Ask About the Project
 
-> Paths and identity method: see CLAUDE.md → Configuration
+> Paths and identity method: see colog Configuration section
 
 Answer questions about the project's history, decisions, changes, and collaboration.
 

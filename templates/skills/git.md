@@ -1,6 +1,6 @@
 # Skill: Git — The Project Log
 
-> Paths and identity method: see CLAUDE.md → Configuration
+> Paths and identity method: see colog Configuration section
 
 Git is the single source of truth for the project log. Every meaningful event —
 changes, decisions, tasks, ideas, notes, milestones — is a git commit.
@@ -33,7 +33,7 @@ Leave empty for general entries: `note(): ...`
 ### User Identity
 
 The `@user` at the end identifies who initiated the action.
-Read from the identity source (see CLAUDE.md → Configuration) — NEVER rely on `git config user.name` (the git user
+Read from the identity source (see colog Configuration section) — NEVER rely on `git config user.name` (the git user
 may always be the agent, not the human).
 
 If identity cannot be determined, use `@Agent`.

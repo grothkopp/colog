@@ -1,6 +1,6 @@
 # /colog:log — Log an Event
 
-> Paths and identity method: see CLAUDE.md → Configuration
+> Paths and identity method: see colog Configuration section
 
 Log a decision, task, idea, note, or change as a git commit.
 This is the single source of truth for creating semantic commits —

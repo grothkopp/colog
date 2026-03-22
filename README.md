@@ -99,7 +99,7 @@ Tasks sync bidirectionally between `tasks.md` and git — completions, new tasks
 
 ## Customization
 
-All configuration lives in `CLAUDE.md` (inside `<!-- colog:start -->` / `<!-- colog:end -->` markers). `/colog:setup` walks you through it.
+All configuration lives in your agent's prompt file — `CLAUDE.md` for Claude Code, `AGENTS.md` for Codex/Copilot/Amp/others, `GEMINI.md` for Gemini CLI. colog detects your agent and uses the right file. The colog section is wrapped in `<!-- colog:start -->` / `<!-- colog:end -->` markers. `/colog:setup` walks you through it.
 
 **File paths** — By default, colog stores files in `colog/`. You can change this to any directory during setup.
 
@@ -123,25 +123,25 @@ my-project/
 │   ├── skills/                      Agent rules (always active)
 │   ├── prompts/                     Scheduled behaviors (heartbeat, morning)
 │   └── config.yaml                  Internal config
-└── CLAUDE.md                     # Agent prompt + colog configuration
+└── CLAUDE.md                     # Agent prompt file (AGENTS.md, GEMINI.md, etc.)
 ```
 
 ## Supported Agents
 
-| Agent | Commands Directory |
-|-------|--------------------|
-| Claude Code | `.claude/commands/` |
-| Codex | `.codex/prompts/` |
-| Cursor | `.cursor/commands/` |
-| Gemini CLI | `.gemini/commands/` |
-| Windsurf | `.windsurf/workflows/` |
-| GitHub Copilot | `.github/agents/` |
-| Kilo Code | `.kilocode/workflows/` |
-| Roo | `.roo/commands/` |
-| OpenCode | `.opencode/command/` |
-| Kiro CLI | `.kiro/prompts/` |
-| Amp | `.agents/commands/` |
-| OpenClaw | `.colog/commands/` |
+| Agent | Prompt File | Commands Directory |
+|-------|-------------|---------------------|
+| Claude Code | `CLAUDE.md` | `.claude/commands/` |
+| Codex | `AGENTS.md` | `.codex/prompts/` |
+| Cursor | `AGENTS.md` | `.cursor/commands/` |
+| Gemini CLI | `GEMINI.md` | `.gemini/commands/` |
+| Windsurf | `AGENTS.md` | `.windsurf/workflows/` |
+| GitHub Copilot | `AGENTS.md` | `.github/agents/` |
+| Kilo Code | `AGENTS.md` | `.kilocode/workflows/` |
+| Roo | `AGENTS.md` | `.roo/commands/` |
+| OpenCode | `AGENTS.md` | `.opencode/command/` |
+| Kiro CLI | `AGENTS.md` | `.kiro/prompts/` |
+| Amp | `AGENTS.md` | `.agents/commands/` |
+| OpenClaw | `AGENTS.md` | `.colog/commands/` |
 
 For Claude Code, `colog init` automatically configures `.claude/settings.json` with git permissions.
 

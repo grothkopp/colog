@@ -1,6 +1,6 @@
 # Skill: Memory
 
-> Paths: see CLAUDE.md → Configuration
+> Paths: see colog Configuration section
 
 Rules for the optional memory snapshot.
 

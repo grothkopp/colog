@@ -1,6 +1,6 @@
 # /colog:sync — Sync Everything
 
-> Paths, identity method, and conversation source: see CLAUDE.md → Configuration
+> Paths, identity method, and conversation source: see colog Configuration section
 
 The central orchestrator. Pulls latest changes, detects and logs events from
 conversations, saves file changes, syncs tasks, and pushes. This is what the

@@ -39,6 +39,22 @@ declare -A AGENT_COMMANDS_DIR=(
   [openclaw]=".colog/commands"
 )
 
+# Agent prompt file — the main instructions file each tool reads
+declare -A AGENT_PROMPT_FILE=(
+  [claude]="CLAUDE.md"
+  [codex]="AGENTS.md"
+  [cursor]="AGENTS.md"
+  [gemini]="GEMINI.md"
+  [windsurf]="AGENTS.md"
+  [copilot]="AGENTS.md"
+  [kilo]="AGENTS.md"
+  [roo]="AGENTS.md"
+  [opencode]="AGENTS.md"
+  [kiro]="AGENTS.md"
+  [amp]="AGENTS.md"
+  [openclaw]="AGENTS.md"
+)
+
 agent_command_filename() {
   local agent="$1" name="$2"
   case "$agent" in
@@ -51,6 +67,11 @@ agent_command_filename() {
 get_commands_dir() {
   local agent="$1"
   echo "${AGENT_COMMANDS_DIR[$agent]:-".colog/commands"}"
+}
+
+get_prompt_file() {
+  local agent="$1"
+  echo "${AGENT_PROMPT_FILE[$agent]:-"AGENTS.md"}"
 }
 
 # ─── USAGE ─────────────────────────────────────────────────────────────────
@@ -408,17 +429,18 @@ GITIGNORE
     info "  ~ .gitignore (added colog/me.md)"
   fi
 
-  # CLAUDE.md handling — extend existing, never overwrite
-  if [[ ! -f "$target/CLAUDE.md" ]]; then
-    cp "$TEMPLATES_DIR/CLAUDE.md.template" "$target/CLAUDE.md"
-    info "  + CLAUDE.md (template — run '/colog:setup' to configure)"
-  elif grep -q "<!-- colog:start -->" "$target/CLAUDE.md"; then
-    warn "  ~ CLAUDE.md (colog section exists, skipped)"
+  # Agent prompt file handling — extend existing, never overwrite
+  local prompt_file=$(get_prompt_file "$agent")
+  if [[ ! -f "$target/$prompt_file" ]]; then
+    cp "$TEMPLATES_DIR/CLAUDE.md.template" "$target/$prompt_file"
+    info "  + $prompt_file (template — run '/colog:setup' to configure)"
+  elif grep -q "<!-- colog:start -->" "$target/$prompt_file"; then
+    warn "  ~ $prompt_file (colog section exists, skipped)"
   else
-    # Append colog section from template to existing CLAUDE.md
-    echo "" >> "$target/CLAUDE.md"
-    sed -n '/<!-- colog:start -->/,/<!-- colog:end -->/p' "$TEMPLATES_DIR/CLAUDE.md.template" >> "$target/CLAUDE.md"
-    info "  ~ CLAUDE.md (appended colog section to existing file)"
+    # Append colog section from template to existing prompt file
+    echo "" >> "$target/$prompt_file"
+    sed -n '/<!-- colog:start -->/,/<!-- colog:end -->/p' "$TEMPLATES_DIR/CLAUDE.md.template" >> "$target/$prompt_file"
+    info "  ~ $prompt_file (appended colog section to existing file)"
   fi
 
   # Configure agent permissions (allow git commands without prompts)
@@ -449,7 +471,7 @@ YAML
   info "  $commands_dir/     Commands (user invokes these)"
   info "  .colog/skills/       Skills (agent rules, always active)"
   info "  .colog/prompts/      Prompts (scheduled behaviors)"
-  info "  CLAUDE.md               Main agent prompt"
+  info "  $prompt_file               Main agent prompt"
   echo ""
   log "Next steps:"
   log "  1. Run /colog:setup in your agent to configure the project"
@@ -610,8 +632,9 @@ YAML
 YAML
   done
 
+  local prompt_file=$(get_prompt_file "$agent")
   log "Generating files..."
-  generate_claude_md "$config" "CLAUDE.md"
+  generate_claude_md "$config" "$prompt_file"
   generate_project_md "$config" "colog/project.md"
   generate_tasks "$config" "colog/tasks.md"
 
@@ -637,7 +660,7 @@ ME_INNER
   log "Setup complete! Your project '${project_name}' is ready."
   echo ""
   log "Next steps:"
-  log "  1. Review CLAUDE.md and colog/project.md"
+  log "  1. Review $prompt_file and colog/project.md"
   log "  2. Set up scheduled tasks (heartbeat + morning)"
   local hint_shortcut="@Agent"
   if [[ -n "$me_shortcut" ]]; then

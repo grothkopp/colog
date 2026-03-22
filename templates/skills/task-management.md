@@ -1,6 +1,6 @@
 # Skill: Task Management
 
-> Paths: see CLAUDE.md → Configuration → Paths
+> Paths: see colog Configuration section → Paths
 
 Rules for maintaining the task snapshot (default: `colog/tasks.md`).
 
