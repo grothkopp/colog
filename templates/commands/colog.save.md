@@ -11,12 +11,12 @@ Capture the current state of work: commit changes with semantic messages, update
 
 ## Steps
 
-1. **Read identity**: `colog/me.md` for @Shortcut
+1. **Read identity**: `colog/me.md` for @Shortcut, name, and email (for `--author`)
 2. **Detect changes**: Run `git status` and `git diff --stat`
 3. **Group changes**: Cluster related files into logical commits
 4. **Update tasks**: If changes relate to open tasks in `colog/tasks.md`, mark them complete
 5. **Show the user** what will be committed
-6. **Commit**: Create semantic commits for each logical group
+6. **Commit**: Create semantic commits for each logical group (use `--author="First Last <email>"` from me.md)
 7. **Summary**: Tell the user what was saved
 
 ## Auto-Detection

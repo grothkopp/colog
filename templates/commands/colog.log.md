@@ -15,7 +15,7 @@ The user tells you what to log. You create a properly formatted commit.
 
 ## Steps
 
-1. Read `colog/me.md` for the current user's @Shortcut
+1. Read `colog/me.md` for the current user's @Shortcut, First name, Last name, and Email
 2. Parse what the user said
 3. Determine the commit type:
    - `decision` — "we decided", "agreed on", "chose"
@@ -25,9 +25,9 @@ The user tells you what to log. You create a properly formatted commit.
    - `note` — anything else worth recording (questions, observations)
    - `milestone` — "launched", "completed phase", "released"
 4. Determine the subject (project area) from context
-5. Create the commit:
-   - **With related file changes**: stage files + commit with semantic message
-   - **Without file changes**: `git commit --allow-empty -m "type(subject): message @user"`
+5. Create the commit (always use `--author="First Last <email>"` from me.md):
+   - **With related file changes**: stage files + `git commit --author="..." -m "type(subject): message @user"`
+   - **Without file changes**: `git commit --allow-empty --author="..." -m "type(subject): message @user"`
 6. If it's a `task`: also add to `colog/tasks.md` with commit short ID, then commit tasks.md
 7. If it's a `decision`: include alternatives in the commit body if mentioned
 

@@ -36,6 +36,20 @@ may always be the agent, not the human).
 
 If `colog/me.md` doesn't exist, use `@Agent`.
 
+### Git Author
+
+Set the commit author to the actual user from `colog/me.md` using `--author`:
+
+```bash
+git commit --author="First Last <email>" -m "type(subject): description @Shortcut"
+```
+
+This way `git log` and `git shortlog` correctly attribute commits to the person
+who initiated them, even when the agent is the one running git.
+
+If the user has no email in `me.md`, use `shortcut@colog` as placeholder
+(e.g., `SG@colog`).
+
 ### Examples
 
 ```
@@ -54,7 +68,8 @@ When logging something with no file changes (a question, decision, idea, or note
 use an empty commit:
 
 ```bash
-git commit --allow-empty -m "note(): what's the best approach for caching? @SG"
+git commit --allow-empty --author="Stefan Grothkopp <sg@example.com>" \
+  -m "note(): what's the best approach for caching? @SG"
 ```
 
 This keeps the log complete without requiring dummy file changes.
@@ -122,21 +137,24 @@ git commit --amend -m "type(subject): corrected description @user"
 For changes with files:
 ```bash
 git add <files>
-git commit -m "change(auth): add password reset flow @SG"
+git commit --author="Stefan Grothkopp <sg@example.com>" \
+  -m "change(auth): add password reset flow @SG"
 ```
 
 For questions or notes without files:
 ```bash
-git commit --allow-empty -m "note(architecture): should we split the monolith? @SG"
+git commit --allow-empty --author="Stefan Grothkopp <sg@example.com>" \
+  -m "note(architecture): should we split the monolith? @SG"
 ```
 
 ## Rules
 
 - Commit after every logical unit of change
 - Write meaningful commit messages — they ARE the project log
+- Always use `--author` with the user's name and email from `colog/me.md`
 - Never auto-push; commits stay local until explicitly pushed
 - One commit per logical event (don't batch unrelated things)
-- Include the @user shortcut from me.md in every commit
+- Include the @user shortcut from me.md in every commit message
 - Use empty commits freely for non-file events
 - The commit message first line is the log entry; use the body for details
 - When logging out of sequence (e.g., a quick question mid-task),

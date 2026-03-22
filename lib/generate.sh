@@ -82,7 +82,9 @@ Use the shortcut in commit messages (\`@Shortcut\`). This file is local and giti
 If it doesn't exist, ask the user to run \`/colog:setup\` or use \`@Agent\`.
 
 IMPORTANT: Do not rely on \`git config user.name\` for identity — the git user
-may always be the agent. The \`@user\` in commit messages is the source of truth.
+may always be the agent. Always use \`--author="First Last <email>"\` from me.md
+when creating commits, so git correctly attributes them. The \`@user\` shortcut
+in commit messages is the human-readable identifier.
 
 ## Workspace Structure
 

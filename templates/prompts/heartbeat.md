@@ -16,7 +16,7 @@ hours, do nothing and exit silently.
 
 ## Steps
 
-1. **Read current user** — `colog/me.md` for the @Shortcut (if missing, use @Agent)
+1. **Read current user** — `colog/me.md` for @Shortcut, name, and email (if missing, use @Agent). Use `--author="First Last <email>"` on all commits.
 2. **Gather context** — Read recent conversations since last heartbeat
 3. **Check for loggable events** and commit them:
    - New tasks mentioned? → `task(subject): description @user` commit + add to tasks.md
