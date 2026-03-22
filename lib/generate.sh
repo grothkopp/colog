@@ -27,6 +27,23 @@ generate_colog_section() {
   cat > "$section_file" << COLOG_INNER
 <!-- colog:start -->
 
+## Agent Behavior
+
+As you work with the user, proactively log what happens using colog:
+
+- **Decisions** made during conversation → log with \`/colog:log\` (type: decision)
+- **Tasks** that come up → log with \`/colog:log\` (type: task)
+- **Ideas** or suggestions → log with \`/colog:log\` (type: idea)
+- **Questions** that need answers later → log with \`/colog:log\` (type: note)
+- **Code changes** you make → commit with \`/colog:save\` when the work is done
+
+Don't wait for the user to ask you to log. If a decision was reached, log it.
+If a task was created, log it. If you finished a piece of work, save it.
+
+After completing a larger piece of work, run \`/colog:sync\` to push everything
+and sync tasks. This keeps the project log up to date without the user having
+to think about it.
+
 ## Git as Log
 
 The git history IS the project log. Every meaningful event — changes, decisions,

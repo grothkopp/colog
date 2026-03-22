@@ -12,7 +12,19 @@ heartbeat calls on schedule — it handles the full sync cycle.
 /colog:sync                     # Full sync cycle
 /colog:sync tasks               # Only sync tasks.md ↔ git
 /colog:sync pull                # Only pull from remote
+/colog:sync --buffer 5m         # Skip events newer than 5 minutes
 ```
+
+## Buffer Parameter
+
+When called from a scheduled heartbeat, use `--buffer` to avoid processing
+events that the agent might still be handling in real-time. The buffer skips
+conversations and events newer than the specified duration.
+
+- **Default (manual)**: no buffer — process everything
+- **Recommended for heartbeat**: `--buffer 5m` — skip last 5 minutes
+- This prevents the heartbeat from logging events that the agent is about to
+  log itself as part of the current conversation
 
 ## Steps
 
